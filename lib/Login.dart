@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smart_attendance_student/Profile.dart';
+
 import 'Student_Model.dart';
 
 class Login extends StatefulWidget {
@@ -16,6 +17,31 @@ class _LoginState extends State<Login> {
   var password = TextEditingController();
   bool _isLoading = false;
   bool show = true;
+  late StudentModel std;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      if (FirebaseAuth.instance.currentUser != null) {
+        final userId = FirebaseAuth.instance.currentUser!.uid;
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('Students')
+            .doc(userId)
+            .get();
+        if (userDoc.exists) {
+          std = StudentModel.fromSnapshot(
+            userDoc.id,
+            userDoc.data() as Map<String, dynamic>,
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ProfilePage(student: std)),
+          );
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,106 +108,120 @@ class _LoginState extends State<Login> {
               (_isLoading)
                   ? CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: () async {
-                  if (email.text.trim().isEmpty ||
-                      password.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Enter Email Or Password",
-                          style: TextStyle(fontSize: 18),
+                      onPressed: () async {
+                        if (email.text.trim().isEmpty ||
+                            password.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "Enter Email Or Password",
+                                style: TextStyle(fontSize: 18),
+                              ),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          try {
+                            UserCredential userCredential = await FirebaseAuth
+                                .instance
+                                .signInWithEmailAndPassword(
+                                  email: email.text.trim(),
+                                  password: password.text.trim(),
+                                );
+                            print(userCredential);
+
+                            // Fetch user data from Firestore
+                            DocumentSnapshot userDoc = await FirebaseFirestore
+                                .instance
+                                .collection(
+                                  'Students',
+                                ) // Adjust the collection name as needed
+                                .doc(
+                                  userCredential.user?.uid,
+                                ) // Use the user's UID
+                                .get();
+
+                            if (userDoc.exists) {
+                              StudentModel student = StudentModel.fromSnapshot(
+                                userDoc.id,
+                                userDoc.data() as Map<String, dynamic>,
+                              );
+
+                              // Navigate to ProfilePage with the student data
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProfilePage(student: student),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('User  data not found.'),
+                                ),
+                              );
+                            }
+                          } on FirebaseAuthException catch (e) {
+                            String message;
+                            switch (e.code) {
+                              case 'invalid-email':
+                                message = 'The email address is not valid.';
+                                break;
+                              case 'user-disabled':
+                                message =
+                                    'The user corresponding to the given email has been disabled.';
+                                break;
+                              case 'user-not-found':
+                                message = 'No user found for that email.';
+                                break;
+                              case 'wrong-password':
+                                message =
+                                    'Wrong password provided for that user.';
+                                break;
+                              case 'operation-not-allowed':
+                                message =
+                                    'Email/password accounts are not enabled.';
+                                break;
+                              default:
+                                message = 'An undefined Error happened.';
+                            }
+
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(message)));
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'An error occurred: ${e.toString()}',
+                                ),
+                              ),
+                            );
+                          } finally {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
                         ),
-                        duration: Duration(seconds: 2),
                       ),
-                    );
-                  } else {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    try {
-                      UserCredential userCredential = await FirebaseAuth.instance
-                          .signInWithEmailAndPassword(
-                        email: email.text.trim(),
-                        password: password.text.trim(),
-                      );
-                      print(userCredential);
-
-                      // Fetch user data from Firestore
-                      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-                          .collection('Students') // Adjust the collection name as needed
-                          .doc(userCredential.user?.uid) // Use the user's UID
-                          .get();
-
-                      if (userDoc.exists) {
-                        StudentModel student = StudentModel.fromSnapshot(
-                          userDoc.id,
-                          userDoc.data() as Map<String, dynamic>,
-                        );
-
-                        // Navigate to ProfilePage with the student data
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProfilePage(student: student),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('User  data not found.'),
-                          ),
-                        );
-                      }
-                    } on FirebaseAuthException catch (e) {
-                      String message;
-                      switch (e.code) {
-                        case 'invalid-email':
-                          message = 'The email address is not valid.';
-                          break;
-                        case 'user-disabled':
-                          message = 'The user corresponding to the given email has been disabled.';
-                          break;
-                        case 'user-not-found':
-                          message = 'No user found for that email.';
-                          break;
-                        case 'wrong-password':
-                          message = 'Wrong password provided for that user.';
-                          break;
-                        case 'operation-not-allowed':
-                          message = 'Email/password accounts are not enabled.';
-                          break;
-                        default:
-                          message = 'An undefined Error happened.';
-                      }
-
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('An error occurred: ${e.toString()}'),
+                      child: Text(
+                        "Login",
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
                         ),
-                      );
-                    } finally {
-                      setState(() {
-                        _isLoading = false;
-                      });
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                ),
-                child: Text(
-                  "Login",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+                      ),
+                    ),
             ],
           ),
         ),
