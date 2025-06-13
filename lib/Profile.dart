@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'Login.dart';
 import 'Scanner.dart';
 import 'Student_Model.dart';
 
@@ -36,6 +38,14 @@ class ProfilePage extends StatelessWidget {
                 );
               },
               child: Text("Scan Qrcode"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                FirebaseAuth.instance.signOut().then((_){
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Login()));
+                });
+              },
+              child: Text("Logout"),
             ),
           ],
         ),

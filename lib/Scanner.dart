@@ -52,6 +52,10 @@ class _StudentScannerState extends State<StudentScanner> {
           result = scanData;
           isScanned = true;
         });
+        if(scanData.code!!=widget.std.course){
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You are not allowed to mark attendance')));
+          return;
+        }
         await _markAttendance(scanData.code!);
         await controller.pauseCamera();
       }
