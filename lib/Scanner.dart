@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:smart_attendance_student/Student_Model.dart';
+import 'Student_Model.dart'; // keep your model
 
 class StudentScanner extends StatefulWidget {
   final StudentModel std;
@@ -17,45 +19,67 @@ class StudentScanner extends StatefulWidget {
 
 class _StudentScannerState extends State<StudentScanner> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  Barcode? result;
   QRViewController? controller;
   bool isScanned = false;
-  late final Map<String, dynamic> studentInfo;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    studentInfo = {
-      'name': widget.std.name,
-      'enrollmentNo': widget.std.enrollment,
-      'course': widget.std.course,
-      'semester': widget.std.semester,
-    };
-  }
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller!.pauseCamera();
-    } else if (Platform.isIOS) {
-      controller!.resumeCamera();
-    }
-  }
+  // Replace with your actual Face++ API credentials
+  final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
+  final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) async {
       if (!isScanned) {
-        setState(() {
-          result = scanData;
-          isScanned = true;
-        });
-        await _markAttendance(scanData.code!);
+        isScanned = true;
         await controller.pauseCamera();
+        await verifyFaceAndMarkAttendance(scanData.code!);
       }
     });
+  }
+
+  Future<void> verifyFaceAndMarkAttendance(String sessionId) async {
+    final XFile? pickedImage = await ImagePicker().pickImage(source: ImageSource.camera);
+    if (pickedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No image selected.')),
+      );
+      return;
+    }
+
+    final match = await compareFaces(widget.std.photourl, File(pickedImage.path));
+    if (match) {
+      await _markAttendance(sessionId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Face matched. Attendance marked!')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Face not matched!')),
+      );
+      Navigator.pop(context);
+
+    }
+  }
+
+  Future<bool> compareFaces(String imageUrl1, File image2) async {
+    final uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/compare');
+    final request = http.MultipartRequest('POST', uri)
+      ..fields['api_key'] = faceApiKey
+      ..fields['api_secret'] = faceApiSecret
+      ..fields['image_url1'] = imageUrl1
+      ..files.add(await http.MultipartFile.fromPath('image_file2', image2.path));
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+    final data = json.decode(responseBody);
+
+    if (data.containsKey('confidence')) {
+      double confidence = data['confidence'];
+      return confidence > 70.0; // Adjust threshold as needed
+    } else {
+      return false;
+    }
   }
 
   Future<void> _markAttendance(String sessionId) async {
@@ -67,28 +91,19 @@ class _StudentScannerState extends State<StudentScanner> {
     String minute = DateFormat('mm').format(DateTime.now());
     String second = DateFormat('ss').format(DateTime.now());
     String time = '$hour:$minute:$second';
-    await FirebaseFirestore.instance
+    final attendanceRef = FirebaseFirestore.instance
         .collection('sessions')
         .doc(sessionId)
         .collection('attendees')
         .add({
-          'name': widget.std.name,
-          'enrollmentNo': widget.std.enrollment,
-          'course': widget.std.course,
-          'semester': widget.std.semester,
-          'timestamp': date,
-          'time': time,
-        })
-        .then((_) {
-          print(sessionId);
-        });
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Attendance Marked')));
-      Navigator.pop(context);
-    }
+      'name': widget.std.name,
+      'enrollmentNo': widget.std.enrollment,
+      'course': widget.std.course,
+      'semester': widget.std.semester,
+      'photourl': widget.std.photourl,
+      'timestamp': date,
+      'time': time,
+    });
   }
 
   @override
@@ -100,21 +115,16 @@ class _StudentScannerState extends State<StudentScanner> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR to Mark Attendance')),
+      appBar: AppBar(title: const Text('Scan QR & Verify Face')),
       body: Column(
-        children: <Widget>[
+        children: [
           Expanded(
             flex: 5,
             child: QRView(key: qrKey, onQRViewCreated: _onQRViewCreated),
           ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: (result != null)
-                  ? Text('Scanned: ${result!.code}')
-                  : const Text('Scan a code'),
-            ),
-          ),
+          const SizedBox(height: 16),
+          const Text('Scan QR Code to Mark Attendance'),
+          const SizedBox(height: 20),
         ],
       ),
     );

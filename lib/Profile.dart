@@ -18,8 +18,12 @@ class ProfilePage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            _buildDetailItem('Name', student.name),
-            SizedBox(height: 10),
+            Image.network(student.photourl,
+              width:MediaQuery.of(context).size.width*0.2,
+              height:MediaQuery.of(context).size.height*0.2,
+            ),
+            Text(student.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),textAlign: TextAlign.center,),
+            SizedBox(height: 20),
             _buildDetailItem('Email', student.email),
             SizedBox(height: 10),
             _buildDetailItem('Enrollment', student.enrollment),
