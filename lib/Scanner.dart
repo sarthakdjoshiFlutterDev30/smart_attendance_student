@@ -44,18 +44,18 @@ class _StudentScannerState extends State<StudentScanner> {
         .get();
 
     if (!sessionDoc.exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Invalid session ID.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('❌ Invalid session ID.')));
       Navigator.pop(context);
       return;
     }
 
     final createdAtMillis = sessionDoc.data()?['createdAtMillis'];
     if (createdAtMillis == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Invalid session data.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('❌ Invalid session data.')));
       Navigator.pop(context);
       return;
     }
@@ -72,24 +72,29 @@ class _StudentScannerState extends State<StudentScanner> {
       return;
     }
 
-    final XFile? pickedImage = await ImagePicker().pickImage(source: ImageSource.camera);
+    final XFile? pickedImage = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+    );
     if (pickedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No image selected.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No image selected.')));
       return;
     }
 
-    final match = await compareFaces(widget.std.photourl, File(pickedImage.path));
+    final match = await compareFaces(
+      widget.std.photourl,
+      File(pickedImage.path),
+    );
     if (match) {
       await _markAttendance(sessionId);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Face matched. Attendance marked!')),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Face not matched!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('❌ Face not matched!')));
     }
     Navigator.pop(context);
   }
@@ -100,7 +105,9 @@ class _StudentScannerState extends State<StudentScanner> {
       ..fields['api_key'] = faceApiKey
       ..fields['api_secret'] = faceApiSecret
       ..fields['image_url1'] = imageUrl1
-      ..files.add(await http.MultipartFile.fromPath('image_file2', image2.path));
+      ..files.add(
+        await http.MultipartFile.fromPath('image_file2', image2.path),
+      );
 
     final response = await request.send();
     final responseBody = await response.stream.bytesToString();
@@ -128,14 +135,14 @@ class _StudentScannerState extends State<StudentScanner> {
         .doc(sessionId)
         .collection('attendees')
         .add({
-      'name': widget.std.name,
-      'enrollmentNo': widget.std.enrollment,
-      'course': widget.std.course,
-      'semester': widget.std.semester,
-      'photourl': widget.std.photourl,
-      'timestamp': date,
-      'time': time,
-    });
+          'name': widget.std.name,
+          'enrollmentNo': widget.std.enrollment,
+          'course': widget.std.course,
+          'semester': widget.std.semester,
+          'photourl': widget.std.photourl,
+          'timestamp': date,
+          'time': time,
+        });
   }
 
   @override
