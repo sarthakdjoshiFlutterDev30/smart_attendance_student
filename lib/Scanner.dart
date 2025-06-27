@@ -38,6 +38,40 @@ class _StudentScannerState extends State<StudentScanner> {
   }
 
   Future<void> verifyFaceAndMarkAttendance(String sessionId) async {
+    final sessionDoc = await FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(sessionId)
+        .get();
+
+    if (!sessionDoc.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Invalid session ID.')),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
+    final createdAtMillis = sessionDoc.data()?['createdAtMillis'];
+    if (createdAtMillis == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Invalid session data.')),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
+    final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAtMillis);
+    final now = DateTime.now();
+    final difference = now.difference(createdTime).inSeconds;
+    print("Difference=${difference.toString()}");
+    if (difference > 20) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('⏰ QR code expired. Try again.')),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
     final XFile? pickedImage = await ImagePicker().pickImage(source: ImageSource.camera);
     if (pickedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,14 +86,12 @@ class _StudentScannerState extends State<StudentScanner> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Face matched. Attendance marked!')),
       );
-      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Face not matched!')),
       );
-      Navigator.pop(context);
-
     }
+    Navigator.pop(context);
   }
 
   Future<bool> compareFaces(String imageUrl1, File image2) async {
@@ -91,7 +123,7 @@ class _StudentScannerState extends State<StudentScanner> {
     String minute = DateFormat('mm').format(DateTime.now());
     String second = DateFormat('ss').format(DateTime.now());
     String time = '$hour:$minute:$second';
-    final attendanceRef = FirebaseFirestore.instance
+    FirebaseFirestore.instance
         .collection('sessions')
         .doc(sessionId)
         .collection('attendees')

@@ -6,6 +6,7 @@ class StudentModel {
   final String course;
   final String semester;
   final String photourl;
+  final String? password;
 
   StudentModel({
     required this.id,
@@ -15,6 +16,7 @@ class StudentModel {
     required this.course,
     required this.semester,
     required this.photourl,
+    required this.password,
   });
 
   factory StudentModel.fromSnapshot(String id, Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class StudentModel {
       course: json['course'] ?? '',
       semester: json['semester'] ?? '',
       photourl: json['photourl'] ?? '',
+      password: json['password'] ?? '',
     );
   }
 
