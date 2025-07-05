@@ -616,6 +616,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  qr_scanner_web:
+    dependency: "direct main"
+    description:
+      name: qr_scanner_web
+      sha256: a843062586fc028af330e441fc5b13c5f104591112be2270dc66763a19478fcd
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.9"
   sky_engine:
     dependency: transitive
     description: flutter
