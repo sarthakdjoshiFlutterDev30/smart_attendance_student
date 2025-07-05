@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'Student_Model.dart'; // keep your model
+import 'Student_Model.dart';
 
 class StudentScanner extends StatefulWidget {
   final StudentModel std;
