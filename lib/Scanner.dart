@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+
 import 'Student_Model.dart';
 
 class StudentScanner extends StatefulWidget {
@@ -64,7 +66,7 @@ class _StudentScannerState extends State<StudentScanner> {
     final now = DateTime.now();
     final difference = now.difference(createdTime).inSeconds;
     print("Difference=${difference.toString()}");
-    if (difference > 20) {
+    if (difference > 60) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('⏰ QR code expired. Try again.')),
       );
@@ -74,6 +76,7 @@ class _StudentScannerState extends State<StudentScanner> {
 
     final XFile? pickedImage = await ImagePicker().pickImage(
       source: ImageSource.camera,
+      preferredCameraDevice: CameraDevice.front,
     );
     if (pickedImage == null) {
       ScaffoldMessenger.of(

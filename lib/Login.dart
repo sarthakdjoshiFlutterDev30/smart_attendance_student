@@ -136,12 +136,8 @@ class _LoginState extends State<Login> {
                             // Fetch user data from Firestore
                             DocumentSnapshot userDoc = await FirebaseFirestore
                                 .instance
-                                .collection(
-                                  'Students',
-                                ) // Adjust the collection name as needed
-                                .doc(
-                                  userCredential.user?.uid,
-                                ) // Use the user's UID
+                                .collection('Students')
+                                .doc(userCredential.user?.uid)
                                 .get();
 
                             if (userDoc.exists) {
@@ -149,8 +145,6 @@ class _LoginState extends State<Login> {
                                 userDoc.id,
                                 userDoc.data() as Map<String, dynamic>,
                               );
-
-                              // Navigate to ProfilePage with the student data
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
@@ -158,6 +152,7 @@ class _LoginState extends State<Login> {
                                       ProfilePage(student: student),
                                 ),
                               );
+                              print(student);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -194,6 +189,7 @@ class _LoginState extends State<Login> {
                               context,
                             ).showSnackBar(SnackBar(content: Text(message)));
                           } catch (e) {
+                            print(e.toString());
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(

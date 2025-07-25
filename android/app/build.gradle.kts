@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.smart_attendance_student"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
