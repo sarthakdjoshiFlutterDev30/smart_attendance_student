@@ -17,31 +17,6 @@ class _LoginState extends State<Login> {
   var password = TextEditingController();
   bool _isLoading = false;
   bool show = true;
-  late StudentModel std;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() async {
-      if (FirebaseAuth.instance.currentUser != null) {
-        final userId = FirebaseAuth.instance.currentUser!.uid;
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('Students')
-            .doc(userId)
-            .get();
-        if (userDoc.exists) {
-          std = StudentModel.fromSnapshot(
-            userDoc.id,
-            userDoc.data() as Map<String, dynamic>,
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => ProfilePage(student: std)),
-          );
-        }
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +127,7 @@ class _LoginState extends State<Login> {
                                       ProfilePage(student: student),
                                 ),
                               );
-                              print(student);
+                              print("User: ${userCredential.user?.uid}");
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
