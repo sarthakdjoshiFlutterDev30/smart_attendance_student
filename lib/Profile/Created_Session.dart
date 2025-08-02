@@ -138,10 +138,18 @@ class _CreatedSessionState extends State<CreatedSession> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(subtitle),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
                           ],
                         ),
                       ),

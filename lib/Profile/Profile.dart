@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:smart_attendance_student/Profile/Created_Session.dart';
+import 'package:smart_attendance_student/Profile/My%20Qr%20Code.dart';
+import 'package:smart_attendance_student/Profile/Scanner_Profile.dart';
 
 import '../Login.dart';
 import '../Model/Student_Model.dart';
+import '../Provider.dart';
 import 'Scanner.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -105,6 +109,44 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
+                InkWell(
+                  onTap: () {
+                    Provider.of<ThemeProvider>(
+                      context,
+                      listen: false,
+                    ).toggleTheme(context);
+                  },
+                  child: const ListTile(
+                    title: Text(
+                      "Change Your Theme",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                    leading: Icon(Icons.nightlight_sharp, color: Colors.white),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ScannerProfile()),
+                    );
+                  },
+                  child: const ListTile(
+                    title: Text(
+                      "Scan Profile Qr Code",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                    leading: Icon(Icons.qr_code, color: Colors.white),
+                  ),
+                ),
               ],
             ),
           ),
@@ -136,6 +178,20 @@ class _ProfilePageState extends State<ProfilePage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+                const SizedBox(height: 20),
+                _buildActionButton(
+                  Icons.qr_code,
+                  "View QR Code",
+                  Colors.green,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => My_Qr_Code(std: widget.student),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 Divider(color: Colors.grey.shade300),

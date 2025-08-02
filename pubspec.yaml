@@ -50,6 +50,9 @@ dependencies:
   shimmer_animation: ^2.2.2
   email_validator: ^3.0.0
   cached_network_image: ^3.4.1
+  provider: ^6.1.5
+  shared_preferences: ^2.5.3
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

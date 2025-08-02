@@ -23,10 +23,7 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
         .collection('sessions')
         .doc(widget.sessionId)
         .collection('attendees')
-        .where(
-          'enrollmentNo',
-          isEqualTo: widget.enrollmentNumber,
-        ); // latest first
+        .where('enrollmentNo', isEqualTo: widget.enrollmentNumber);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recent Attendance'), centerTitle: true),
