@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_attendance_student/Profile.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
+import 'package:smart_attendance_student/Profile/Profile.dart';
 
-import 'Student_Model.dart';
+import 'Model/Student_Model.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -17,6 +19,34 @@ class _LoginState extends State<Login> {
   var password = TextEditingController();
   bool _isLoading = false;
   bool show = true;
+  void sendEmailResetLink(String email) {
+    FirebaseAuth.instance.sendPasswordResetEmail(email: email).then((_) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Email Link Sent At:$email"),
+            titleTextStyle: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  "OK",
+                  style: TextStyle(fontSize: 20, color: Colors.black),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +111,26 @@ class _LoginState extends State<Login> {
               ),
               SizedBox(height: 10),
               (_isLoading)
-                  ? CircularProgressIndicator()
+                  ? Shimmer(
+                      color: Colors.grey,
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.4,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        height: MediaQuery.of(context).size.height * 0.04,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          textAlign: TextAlign.center,
+                          "Please Wait ...",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
                   : ElevatedButton(
                       onPressed: () async {
                         if (email.text.trim().isEmpty ||
@@ -193,6 +242,38 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                     ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Forgot Password?",
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      if (email.text.isNotEmpty &&
+                          EmailValidator.validate(email.text)) {
+                        sendEmailResetLink(email.text.toString());
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Enter Valid Email",
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(
+                      "Reset",
+                      style: TextStyle(fontSize: 20, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

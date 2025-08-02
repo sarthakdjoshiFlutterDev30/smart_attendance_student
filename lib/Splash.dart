@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_attendance_student/Profile.dart';
+import 'package:smart_attendance_student/Profile/Profile.dart';
 
 import 'Login.dart';
-import 'Student_Model.dart';
+import 'Model/Student_Model.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});

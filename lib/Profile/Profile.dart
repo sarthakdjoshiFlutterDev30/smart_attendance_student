@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_attendance_student/Profile/Created_Session.dart';
 
-import 'Login.dart';
+import '../Login.dart';
+import '../Model/Student_Model.dart';
 import 'Scanner.dart';
-import 'Student_Model.dart';
 
 class ProfilePage extends StatefulWidget {
   final StudentModel student;
@@ -26,16 +27,96 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Student Profile'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
+      drawer: Drawer(
+        backgroundColor: Colors.deepPurple,
+        child: Drawer(
+          child: Container(
+            color: Colors.deepPurple,
+            child: Column(
+              children: [
+                DrawerHeader(
+                  child: Text(
+                    "Welcome\n${widget.student.name}",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            CreatedSession(student: widget.student),
+                      ),
+                    );
+                  },
+                  child: ListTile(
+                    leading: Icon(Icons.history, color: Colors.white),
+                    title: Text(
+                      "History",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.settings, color: Colors.white),
+                  title: Text(
+                    "Settings",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    FirebaseAuth.instance.signOut().then((_) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => Login()),
+                      );
+                    });
+                  },
+                  child: ListTile(
+                    leading: Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      "Logout",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(
           elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: ListView(
@@ -50,7 +131,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 Center(
                   child: Text(
                     widget.student.name,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -61,23 +145,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildDetailItem('Semester', widget.student.semester),
                 Divider(color: Colors.grey.shade300),
                 const SizedBox(height: 10),
-                _buildActionButton(Icons.qr_code_scanner, "Scan QR Code", Colors.blue, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => StudentScanner(std: widget.student),
-                    ),
-                  );
-                }),
-                _buildActionButton(Icons.logout, "Logout", Colors.redAccent, () {
-                  FirebaseAuth.instance.signOut().then((_) {
-                    Navigator.pushReplacement(
+                _buildActionButton(
+                  Icons.qr_code_scanner,
+                  "Scan QR Code",
+                  Colors.blue,
+                  () {
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => Login()),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            StudentScanner(std: widget.student),
+                      ),
                     );
-                  });
-                }),
-                _buildActionButton(Icons.lock, "Change Password", Colors.deepPurple, _showPasswordDialog),
+                  },
+                ),
+                _buildActionButton(
+                  Icons.lock,
+                  "Change Password",
+                  Colors.deepPurple,
+                  _showPasswordDialog,
+                ),
               ],
             ),
           ),
@@ -92,14 +179,22 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+          Text(
+            '$label: ',
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onPressed) {
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: ElevatedButton.icon(
@@ -109,7 +204,9 @@ class _ProfilePageState extends State<ProfilePage> {
           backgroundColor: color,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         onPressed: onPressed,
       ),
@@ -133,7 +230,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     decoration: InputDecoration(
                       labelText: "Current Password",
                       suffixIcon: IconButton(
-                        icon: Icon(pass1 ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          pass1 ? Icons.visibility_off : Icons.visibility,
+                        ),
                         onPressed: () {
                           setState(() {
                             pass1 = !pass1;
@@ -149,7 +248,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     decoration: InputDecoration(
                       labelText: "New Password",
                       suffixIcon: IconButton(
-                        icon: Icon(pass2 ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          pass2 ? Icons.visibility_off : Icons.visibility,
+                        ),
                         onPressed: () {
                           setState(() {
                             pass2 = !pass2;
@@ -168,12 +269,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     newPass.clear();
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text("Cancel",style: TextStyle(color: Colors.black),),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: _changePassword,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.lightGreenAccent),
-                  child: const Text("Update",style: TextStyle(color: Colors.black),),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.lightGreenAccent,
+                  ),
+                  child: const Text(
+                    "Update",
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
               ],
             );
@@ -185,9 +294,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _changePassword() async {
     if (oldPass.text.isEmpty || newPass.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Fields cannot be empty")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Fields cannot be empty")));
       return;
     }
 

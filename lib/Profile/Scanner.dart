@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
-import 'Student_Model.dart';
+import '../Model/Student_Model.dart';
 
 class StudentScanner extends StatefulWidget {
   final StudentModel std;
