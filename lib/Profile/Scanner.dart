@@ -72,7 +72,8 @@ class _StudentScannerState extends State<StudentScanner> {
 
       final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAtMillis);
       final now = DateTime.now();
-      if (now.difference(createdTime).inSeconds > 120) {
+      print("Difference${now.difference(createdTime).inSeconds.toString()}");
+      if (now.difference(createdTime).inSeconds > 10) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('⏰ QR code expired. Try again.')),
         );

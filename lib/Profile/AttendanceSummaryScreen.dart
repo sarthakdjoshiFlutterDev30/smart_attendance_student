@@ -28,15 +28,16 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
           .collection('sessions')
           .get();
 
-      Map<String, int> tempTotal = {};
+      Map<String, Set<String>> uniqueLectures = {};
       Map<String, int> tempAttended = {};
 
       for (var session in sessionSnapshot.docs) {
         final data = session.data();
-        String subject = data['lecName'] ?? 'Unknown';
+        String subject = (data['lecName'] ?? 'Unknown').toString().trim();
+        String lecNo = (data['lecNo'] ?? session.id).toString();
 
-        tempTotal[subject] = (tempTotal[subject] ?? 0) + 1;
-
+        uniqueLectures.putIfAbsent(subject, () => {});
+        uniqueLectures[subject]!.add(lecNo);
         final attendeeSnapshot = await FirebaseFirestore.instance
             .collection('sessions')
             .doc(session.id)
@@ -49,10 +50,16 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
         }
       }
 
-      // calculate overall percentage
-      int totalAll = tempTotal.values.fold(0, (a, b) => a + b);
-      int attendedAll = tempAttended.values.fold(0, (a, b) => a + b);
-      double overall = totalAll == 0 ? 0 : (attendedAll / totalAll) * 100;
+      Map<String, int> tempTotal = {};
+      uniqueLectures.forEach((subject, lecSet) {
+        tempTotal[subject] = lecSet.length;
+      });
+
+      int totalAllLectures = tempTotal.values.fold(0, (sum, val) => sum + val);
+      int totalAttended = tempAttended.values.fold(0, (sum, val) => sum + val);
+      double overall = totalAllLectures == 0
+          ? 0
+          : (totalAttended / totalAllLectures) * 100;
 
       setState(() {
         totalLectures = tempTotal;
@@ -101,14 +108,11 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             "Overall Attendance",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: overallPercentage >= 75
-                                  ? Colors.green
-                                  : Colors.red,
                             ),
                           ),
                           Text(
