@@ -25,18 +25,31 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
         .collection('attendees')
         .where('enrollmentNo', isEqualTo: widget.enrollmentNumber);
 
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Recent Attendance'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Recent Attendance'),
+        centerTitle: true,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: attendeesRef.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('Error loading attendees'));
+            return Center(
+              child: Text(
+                'Error loading attendees',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            );
           }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: Shimmer(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.white24 : Colors.grey,
                 child: Container(
                   width: MediaQuery.of(context).size.width,
                   margin: const EdgeInsets.symmetric(vertical: 8),
@@ -45,10 +58,14 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                     color: Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    textAlign: TextAlign.center,
-                    "Please Wait ...",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  child: const Center(
+                    child: Text(
+                      "Please Wait ...",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -57,7 +74,12 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
 
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
-            return const Center(child: Text('No attendees yet.'));
+            return Center(
+              child: Text(
+                'No attendees yet.',
+                style: TextStyle(color: theme.textTheme.bodyMedium?.color),
+              ),
+            );
           }
 
           return ListView.separated(
@@ -76,13 +98,13 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
 
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
                       blurRadius: 8,
-                      offset: Offset(0, 3),
-                      color: Colors.black12,
+                      offset: const Offset(0, 3),
+                      color: isDarkMode ? Colors.black54 : Colors.black12,
                     ),
                   ],
                 ),
@@ -99,7 +121,9 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                                 backgroundImage: NetworkImage(photoUrl),
                               )
                             : Container(
-                                color: Colors.grey.shade200,
+                                color: isDarkMode
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade200,
                                 child: const Icon(Icons.person, size: 32),
                               ),
                       ),
@@ -110,31 +134,60 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            name.toString(),
-                            style: const TextStyle(
+                            name,
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: theme.textTheme.bodyLarge?.color,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text("Enrollment: $enrollment"),
-                          Text("Course: $course | Sem: $semester"),
+                          Text(
+                            "Enrollment: $enrollment",
+                            style: TextStyle(
+                              color: theme.textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                          Text(
+                            "Course: $course | Sem: $semester",
+                            style: TextStyle(
+                              color: theme.textTheme.bodyMedium?.color,
+                            ),
+                          ),
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              const Icon(Icons.calendar_month, size: 14),
+                              Icon(
+                                Icons.calendar_month,
+                                size: 14,
+                                color: theme.iconTheme.color,
+                              ),
                               const SizedBox(width: 4),
-                              Text(timestamp.toString()),
+                              Text(
+                                timestamp.toString(),
+                                style: TextStyle(
+                                  color: theme.textTheme.bodyMedium?.color,
+                                ),
+                              ),
                               const SizedBox(width: 12),
-                              const Icon(Icons.access_time, size: 14),
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: theme.iconTheme.color,
+                              ),
                               const SizedBox(width: 4),
-                              Text(time.toString()),
+                              Text(
+                                time.toString(),
+                                style: TextStyle(
+                                  color: theme.textTheme.bodyMedium?.color,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.check_circle, color: Colors.green),
+                    Icon(Icons.check_circle, color: Colors.green),
                   ],
                 ),
               );

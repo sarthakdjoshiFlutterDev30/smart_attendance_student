@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -22,84 +23,117 @@ class StudentScanner extends StatefulWidget {
 class _StudentScannerState extends State<StudentScanner> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
+  bool isProcessing = false;
   bool isScanned = false;
 
-  // Replace with your actual Face++ API credentials
   final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
   final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
+
+  final double ampicsLat = 23.5233089;
+  final double ampicsLng = 72.4533651;
+  final double allowedRadius = 200;
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) async {
       if (!isScanned) {
         isScanned = true;
+        setState(() => isProcessing = true); // ✅ start loading
         await controller.pauseCamera();
         await verifyFaceAndMarkAttendance(scanData.code!);
+        setState(() => isProcessing = false); // ✅ stop loading
       }
     });
   }
 
   Future<void> verifyFaceAndMarkAttendance(String sessionId) async {
-    final sessionDoc = await FirebaseFirestore.instance
-        .collection('sessions')
-        .doc(sessionId)
-        .get();
+    try {
+      final sessionDoc = await FirebaseFirestore.instance
+          .collection('sessions')
+          .doc(sessionId)
+          .get();
 
-    if (!sessionDoc.exists) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('❌ Invalid session ID.')));
-      Navigator.pop(context);
-      return;
-    }
+      if (!sessionDoc.exists) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('❌ Invalid session ID.')));
+        Navigator.pop(context);
+        return;
+      }
 
-    final createdAtMillis = sessionDoc.data()?['createdAtMillis'];
-    if (createdAtMillis == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('❌ Invalid session data.')));
-      Navigator.pop(context);
-      return;
-    }
+      final createdAtMillis = sessionDoc.data()?['createdAtMillis'];
+      if (createdAtMillis == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Invalid session data.')),
+        );
+        Navigator.pop(context);
+        return;
+      }
 
-    final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAtMillis);
-    final now = DateTime.now();
-    final difference = now.difference(createdTime).inSeconds;
-    print("Difference=${difference.toString()}");
-    if (difference > 60) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⏰ QR code expired. Try again.')),
+      final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAtMillis);
+      final now = DateTime.now();
+      if (now.difference(createdTime).inSeconds > 120) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('⏰ QR code expired. Try again.')),
+        );
+        Navigator.pop(context);
+        return;
+      }
+
+      bool isInsideCampus = await _isInsideCampus();
+      if (!isInsideCampus) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ You are not inside AMPICS campus!')),
+        );
+        Navigator.pop(context);
+        return;
+      }
+      final attendeeQuery = await FirebaseFirestore.instance
+          .collection('sessions')
+          .doc(sessionId)
+          .collection('attendees')
+          .where('enrollmentNo', isEqualTo: widget.std.enrollment)
+          .get();
+
+      if (attendeeQuery.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('⚠️ Attendance already marked!')),
+        );
+        Navigator.pop(context);
+        return;
+      }
+      final XFile? pickedImage = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
       );
-      Navigator.pop(context);
-      return;
-    }
+      if (pickedImage == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No image selected.')));
+        return;
+      }
 
-    final XFile? pickedImage = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      preferredCameraDevice: CameraDevice.front,
-    );
-    if (pickedImage == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No image selected.')));
-      return;
-    }
-
-    final match = await compareFaces(
-      widget.std.photourl,
-      File(pickedImage.path),
-    );
-    if (match) {
-      await _markAttendance(sessionId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Face matched. Attendance marked!')),
+      final match = await compareFaces(
+        widget.std.photourl,
+        File(pickedImage.path),
       );
-    } else {
+      if (match) {
+        await _markAttendance(sessionId);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Face matched. Attendance marked!')),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('❌ Face not matched!')));
+      }
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('❌ Face not matched!')));
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      Navigator.pop(context);
     }
-    Navigator.pop(context);
   }
 
   Future<bool> compareFaces(String imageUrl1, File image2) async {
@@ -118,22 +152,17 @@ class _StudentScannerState extends State<StudentScanner> {
 
     if (data.containsKey('confidence')) {
       double confidence = data['confidence'];
-      return confidence > 70.0; // Adjust threshold as needed
-    } else {
-      return false;
+      return confidence > 70.0;
     }
+    return false;
   }
 
   Future<void> _markAttendance(String sessionId) async {
-    String day = DateFormat('dd').format(DateTime.now());
-    String month = DateFormat('MM').format(DateTime.now());
-    String year = DateFormat('yyyy').format(DateTime.now());
-    String date = '$day-$month-$year';
-    String hour = DateFormat('HH').format(DateTime.now());
-    String minute = DateFormat('mm').format(DateTime.now());
-    String second = DateFormat('ss').format(DateTime.now());
-    String time = '$hour:$minute:$second';
-    FirebaseFirestore.instance
+    final now = DateTime.now();
+    String date = DateFormat('dd-MM-yyyy').format(now);
+    String time = DateFormat('HH:mm:ss').format(now);
+
+    await FirebaseFirestore.instance
         .collection('sessions')
         .doc(sessionId)
         .collection('attendees')
@@ -148,6 +177,26 @@ class _StudentScannerState extends State<StudentScanner> {
         });
   }
 
+  Future<bool> _isInsideCampus() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever)
+      return false;
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    double distance = Geolocator.distanceBetween(
+      ampicsLat,
+      ampicsLng,
+      position.latitude,
+      position.longitude,
+    );
+
+    return distance <= allowedRadius;
+  }
+
   @override
   void dispose() {
     controller?.dispose();
@@ -158,15 +207,26 @@ class _StudentScannerState extends State<StudentScanner> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan QR & Verify Face')),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            flex: 5,
-            child: QRView(key: qrKey, onQRViewCreated: _onQRViewCreated),
+          Column(
+            children: [
+              Expanded(
+                flex: 5,
+                child: QRView(key: qrKey, onQRViewCreated: _onQRViewCreated),
+              ),
+              const SizedBox(height: 16),
+              const Text('Scan QR Code to Mark Attendance'),
+              const SizedBox(height: 20),
+            ],
           ),
-          const SizedBox(height: 16),
-          const Text('Scan QR Code to Mark Attendance'),
-          const SizedBox(height: 20),
+          if (isProcessing)
+            Container(
+              color: Colors.black38,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
         ],
       ),
     );

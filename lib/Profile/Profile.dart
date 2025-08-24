@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_attendance_student/Profile/AttendanceSummaryScreen.dart';
 import 'package:smart_attendance_student/Profile/Created_Session.dart';
 import 'package:smart_attendance_student/Profile/My%20Qr%20Code.dart';
 import 'package:smart_attendance_student/Profile/Scanner_Profile.dart';
@@ -25,6 +27,34 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController newPass = TextEditingController();
   bool pass1 = true;
   bool pass2 = true;
+  String locationMessage = "";
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      setState(() {
+        locationMessage = "Location permission denied";
+      });
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    setState(() {
+      locationMessage =
+          "Latitude: ${position.latitude}, Longitude: ${position.longitude}";
+    });
+    print(locationMessage);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,14 +107,26 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Colors.white),
-                  title: Text(
-                    "Settings",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.white,
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AttendanceSummaryScreen(
+                          enrollmentNo: widget.student.enrollment,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ListTile(
+                    leading: Icon(Icons.bar_chart, color: Colors.white),
+                    title: Text(
+                      "Attendance Summary",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

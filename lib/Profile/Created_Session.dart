@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
 
 import '../Model/Student_Model.dart';
 import 'Attendance_History.dart';
@@ -33,65 +32,34 @@ class _CreatedSessionState extends State<CreatedSession> {
 
           final allSessions = snapshot.data!.docs;
 
-          final seenNames = <String>{};
-          final uniqueSessions = allSessions.where((doc) {
-            final name =
-                (doc.data() as Map<String, dynamic>)['name']
-                    ?.toString()
-                    .trim()
-                    .toLowerCase() ??
-                '';
-            if (seenNames.contains(name)) {
-              return false;
-            } else {
-              seenNames.add(name);
-              return true;
-            }
+          final today = DateTime.now();
+          final todayString =
+              "${today.day.toString().padLeft(2, '0')}-${today.month.toString().padLeft(2, '0')}-${today.year}";
+
+          // Filter sessions for today
+          final todaySessions = allSessions.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final lecDate = data['lecDate']?.toString().trim() ?? '';
+            return lecDate == todayString;
           }).toList();
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: Shimmer(
-                color: Colors.grey,
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  height: MediaQuery.of(context).size.height,
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    textAlign: TextAlign.center,
-                    "Please Wait ...",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            );
+            return Center(child: CircularProgressIndicator());
           }
-          final docs = uniqueSessions;
+
+          if (todaySessions.isEmpty) {
+            return const Center(child: Text("No sessions for today"));
+          }
+
           return ListView.separated(
             padding: const EdgeInsets.all(12),
-            itemCount: docs.length,
+            itemCount: todaySessions.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
-              final doc = docs[index];
+              final doc = todaySessions[index];
               final data = doc.data() as Map<String, dynamic>;
-              final title = data['name'] ?? doc.id;
-              final timestamp = data['timestamp'] ?? '';
-              final createdAtMillis = data['createdAtMillis'];
-
-              String subtitle = "ID: ${doc.id}";
-              if (timestamp != '') {
-                subtitle = timestamp.toString();
-              } else if (createdAtMillis != null) {
-                final dt = DateTime.fromMillisecondsSinceEpoch(
-                  int.tryParse(createdAtMillis.toString()) ?? 0,
-                );
-                subtitle =
-                    "Recent Session:  ${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
-              }
+              final title = data['lecName'] ?? doc.id;
+              final date = data['lecDate'] ?? 'N/A';
 
               return InkWell(
                 onTap: () {
@@ -143,11 +111,10 @@ class _CreatedSessionState extends State<CreatedSession> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              subtitle,
+                              date,
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                fontSize: 14,
+                                color: Colors.grey,
                               ),
                             ),
                           ],
