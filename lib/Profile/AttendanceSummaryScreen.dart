@@ -101,11 +101,14 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             "Overall Attendance",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: overallPercentage >= 75
+                                  ? Colors.green
+                                  : Colors.red,
                             ),
                           ),
                           Text(
