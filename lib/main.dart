@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_attendance_student/Splash.dart';
 import 'package:smart_attendance_student/provider2.dart';
+import 'package:smart_attendance_student/ui/app_theme.dart';
 
 import 'Provider.dart';
 import 'firebase_options.dart';
@@ -79,8 +80,8 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       themeMode: themeProvider.themeMode,
 
       home: Splash(),

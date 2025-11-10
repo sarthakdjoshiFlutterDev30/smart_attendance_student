@@ -29,8 +29,8 @@ class _StudentScannerState extends State<StudentScanner> {
   final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
   final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
 
-  final double ampicsLat = 23.5233089;
-  final double ampicsLng = 72.4533651;
+  final double ampicsLat = 23.5220667;
+  final double ampicsLng = 72.4481446;
   final double allowedRadius = 200;
 
   void _onQRViewCreated(QRViewController controller) {
@@ -60,6 +60,12 @@ class _StudentScannerState extends State<StudentScanner> {
         Navigator.pop(context);
         return;
       }
+
+      final sessionData = sessionDoc.data() as Map<String, dynamic>?;
+      final String subject =
+          (sessionData != null && sessionData['subject'] is String)
+              ? (sessionData['subject'] as String)
+              : 'Unknown';
 
       final createdAtMillis = sessionDoc.data()?['createdAtMillis'];
       if (createdAtMillis == null) {
@@ -94,6 +100,7 @@ class _StudentScannerState extends State<StudentScanner> {
           .doc(sessionId)
           .collection('attendees')
           .where('enrollmentNo', isEqualTo: widget.std.enrollment)
+          .where('subject', isEqualTo: subject)
           .get();
 
       if (attendeeQuery.docs.isNotEmpty) {
@@ -119,7 +126,7 @@ class _StudentScannerState extends State<StudentScanner> {
         File(pickedImage.path),
       );
       if (match) {
-        await _markAttendance(sessionId);
+        await _markAttendance(sessionId, subject);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Face matched. Attendance marked!')),
         );
@@ -158,7 +165,7 @@ class _StudentScannerState extends State<StudentScanner> {
     return false;
   }
 
-  Future<void> _markAttendance(String sessionId) async {
+  Future<void> _markAttendance(String sessionId, String subject) async {
     final now = DateTime.now();
     String date = DateFormat('dd-MM-yyyy').format(now);
     String time = DateFormat('HH:mm:ss').format(now);
@@ -173,6 +180,7 @@ class _StudentScannerState extends State<StudentScanner> {
           'course': widget.std.course,
           'semester': widget.std.semester,
           'photourl': widget.std.photourl,
+          'subject': subject,
           'timestamp': date,
           'time': time,
         });

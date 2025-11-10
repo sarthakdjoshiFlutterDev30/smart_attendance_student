@@ -47,6 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
+
     );
 
     setState(() {
@@ -58,139 +59,163 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Exit app?"),
+            content: const Text("Are you sure you want to close the app?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Exit"),
+              ),
+            ],
+          ),
+        );
+        if (shouldExit == true) {
+          // For Android
+          // ignore: use_build_context_synchronously
+          Navigator.of(context).pop(true);
+        }
+        return shouldExit ?? false;
+      },
+      child: Scaffold(
       appBar: AppBar(
-        centerTitle: true,
         title: const Text('Student Profile'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        elevation: 0,
       ),
       drawer: Drawer(
-        backgroundColor: Colors.deepPurple,
-        child: Drawer(
-          child: Container(
-            color: Colors.deepPurple,
-            child: Column(
-              children: [
-                DrawerHeader(
-                  child: Text(
-                    "Welcome\n${widget.student.name}",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.white,
+        child: Container(
+          color: Theme.of(context).colorScheme.primary,
+          child: Column(
+            children: [
+              DrawerHeader(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 34,
+                      backgroundImage: NetworkImage(widget.student.photourl),
                     ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Welcome\n${widget.student.name}",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.history,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                title: Text(
+                  "History",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            CreatedSession(student: widget.student),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CreatedSession(student: widget.student),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.bar_chart,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                title: Text(
+                  "Attendance Summary",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AttendanceSummaryScreen(
+                        enrollmentNo: widget.student.enrollment,
                       ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.nightlight_sharp,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                title: Text(
+                  "Change Your Theme",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                onTap: () {
+                  Provider.of<ThemeProvider>(
+                    context,
+                    listen: false,
+                  ).toggleTheme(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.qr_code,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                title: Text(
+                  "Scan Profile Qr Code",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ScannerProfile()),
+                  );
+                },
+              ),
+              const Spacer(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: Colors.redAccent,
+                  ),
+                ),
+                onTap: () {
+                  FirebaseAuth.instance.signOut().then((_) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => Login()),
                     );
-                  },
-                  child: ListTile(
-                    leading: Icon(Icons.history, color: Colors.white),
-                    title: Text(
-                      "History",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AttendanceSummaryScreen(
-                          enrollmentNo: widget.student.enrollment,
-                        ),
-                      ),
-                    );
-                  },
-                  child: ListTile(
-                    leading: Icon(Icons.bar_chart, color: Colors.white),
-                    title: Text(
-                      "Attendance Summary",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    FirebaseAuth.instance.signOut().then((_) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => Login()),
-                      );
-                    });
-                  },
-                  child: ListTile(
-                    leading: Icon(Icons.logout, color: Colors.red),
-                    title: Text(
-                      "Logout",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    Provider.of<ThemeProvider>(
-                      context,
-                      listen: false,
-                    ).toggleTheme(context);
-                  },
-                  child: const ListTile(
-                    title: Text(
-                      "Change Your Theme",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    leading: Icon(Icons.nightlight_sharp, color: Colors.white),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ScannerProfile()),
-                    );
-                  },
-                  child: const ListTile(
-                    title: Text(
-                      "Scan Profile Qr Code",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    leading: Icon(Icons.qr_code, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+                  });
+                },
+              ),
+            ],
           ),
         ),
       ),
@@ -267,6 +292,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

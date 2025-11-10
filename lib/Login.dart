@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:smart_attendance_student/Profile/Profile.dart';
 
@@ -50,233 +51,273 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            fit: BoxFit.fill,
-            image: AssetImage("assets/images/Background.jpeg"),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: email,
-                style: const TextStyle(fontSize: 20, color: Colors.white),
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: "Enter Email Address",
-                  hintStyle: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Exit app?"),
+            content: const Text("Are you sure you want to close the app?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
               ),
-              SizedBox(height: 10),
-              TextField(
-                controller: password,
-                style: const TextStyle(fontSize: 20, color: Colors.white),
-                keyboardType: TextInputType.text,
-                obscureText: show,
-                obscuringCharacter: "*",
-                decoration: InputDecoration(
-                  suffixIcon: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        show = !show;
-                      });
-                    },
-                    child: Text(
-                      (show) ? "Show" : "Hide",
-                      style: TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                  ),
-                  hintText: "Enter Password",
-                  hintStyle: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              (_isLoading)
-                  ? Shimmer(
-                      color: Colors.grey,
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        height: MediaQuery.of(context).size.height * 0.04,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          textAlign: TextAlign.center,
-                          "Please Wait ...",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ElevatedButton(
-                      onPressed: () async {
-                        if (email.text.trim().isEmpty ||
-                            password.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "Enter Email Or Password",
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        } else {
-                          setState(() {
-                            _isLoading = true;
-                          });
-                          try {
-                            UserCredential userCredential = await FirebaseAuth
-                                .instance
-                                .signInWithEmailAndPassword(
-                                  email: email.text.trim(),
-                                  password: password.text.trim(),
-                                );
-                            print(userCredential);
-
-                            // Fetch user data from Firestore
-                            DocumentSnapshot userDoc = await FirebaseFirestore
-                                .instance
-                                .collection('Students')
-                                .doc(userCredential.user?.uid)
-                                .get();
-
-                            if (userDoc.exists) {
-                              StudentModel student = StudentModel.fromSnapshot(
-                                userDoc.id,
-                                userDoc.data() as Map<String, dynamic>,
-                              );
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ProfilePage(student: student),
-                                ),
-                              );
-                              print("User: ${userCredential.user?.uid}");
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('User  data not found.'),
-                                ),
-                              );
-                            }
-                          } on FirebaseAuthException catch (e) {
-                            String message;
-                            switch (e.code) {
-                              case 'invalid-email':
-                                message = 'The email address is not valid.';
-                                break;
-                              case 'user-disabled':
-                                message =
-                                    'The user corresponding to the given email has been disabled.';
-                                break;
-                              case 'user-not-found':
-                                message = 'No user found for that email.';
-                                break;
-                              case 'wrong-password':
-                                message =
-                                    'Wrong password provided for that user.';
-                                break;
-                              case 'operation-not-allowed':
-                                message =
-                                    'Email/password accounts are not enabled.';
-                                break;
-                              default:
-                                message = 'An undefined Error happened.';
-                            }
-
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(message)));
-                          } catch (e) {
-                            print(e.toString());
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'An error occurred: ${e.toString()}',
-                                ),
-                              ),
-                            );
-                          } finally {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
-                      ),
-                      child: Text(
-                        "Login",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Forgot Password?",
-                    style: TextStyle(fontSize: 20, color: Colors.white),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      if (email.text.isNotEmpty &&
-                          EmailValidator.validate(email.text)) {
-                        sendEmailResetLink(email.text.toString());
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Enter Valid Email",
-                              style: TextStyle(fontSize: 18),
-                            ),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(
-                      "Reset",
-                      style: TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                  ),
-                ],
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Exit"),
               ),
             ],
           ),
-        ),
+        );
+        if (shouldExit == true) {
+          SystemNavigator.pop();
+          return true;
+        }
+        return false;
+      },
+      child: Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            "assets/images/Background.jpeg",
+            fit: BoxFit.cover,
+          ),
+          Container(color: Colors.black.withOpacity(isDark ? 0.60 : 0.45)),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: colorScheme.primaryContainer,
+                                radius: 28,
+                                child: Icon(Icons.how_to_reg,
+                                    color: colorScheme.onPrimaryContainer),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                "Smart Attendance",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 22,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          TextField(
+                            controller: email,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: const InputDecoration(
+                              labelText: "Email address",
+                              hintText: "name@college.edu",
+                              prefixIcon: Icon(Icons.email_outlined),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: password,
+                            keyboardType: TextInputType.text,
+                            obscureText: show,
+                            obscuringCharacter: "•",
+                            decoration: InputDecoration(
+                              labelText: "Password",
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    show = !show;
+                                  });
+                                },
+                                icon: Icon(
+                                  show
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                if (email.text.isNotEmpty &&
+                                    EmailValidator.validate(email.text)) {
+                                  sendEmailResetLink(email.text.toString());
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Enter a valid email"),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text("Forgot password?"),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          (_isLoading)
+                              ? Shimmer(
+                                  color: Colors.grey,
+                                  child: Container(
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "Please wait...",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : SizedBox(
+                                  height: 52,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      if (email.text.trim().isEmpty ||
+                                          password.text.trim().isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Enter email and password",
+                                            ),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() {
+                                          _isLoading = true;
+                                        });
+                                        try {
+                                          UserCredential userCredential =
+                                              await FirebaseAuth.instance
+                                                  .signInWithEmailAndPassword(
+                                            email: email.text.trim(),
+                                            password: password.text.trim(),
+                                          );
+                                          print(userCredential);
+
+                                          DocumentSnapshot userDoc =
+                                              await FirebaseFirestore.instance
+                                                  .collection('Students')
+                                                  .doc(userCredential
+                                                      .user
+                                                      ?.uid)
+                                                  .get();
+
+                                          if (userDoc.exists) {
+                                            StudentModel student =
+                                                StudentModel.fromSnapshot(
+                                              userDoc.id,
+                                              userDoc.data()
+                                                  as Map<String, dynamic>,
+                                            );
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProfilePage(
+                                                        student: student),
+                                              ),
+                                            );
+                                            print(
+                                                "User: ${userCredential.user?.uid}");
+                                          } else {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'User data not found.'),
+                                              ),
+                                            );
+                                          }
+                                        } on FirebaseAuthException catch (e) {
+                                          String message;
+                                          switch (e.code) {
+                                            case 'invalid-email':
+                                              message =
+                                                  'The email address is not valid.';
+                                              break;
+                                            case 'user-disabled':
+                                              message =
+                                                  'The user corresponding to the given email has been disabled.';
+                                              break;
+                                            case 'user-not-found':
+                                              message =
+                                                  'No user found for that email.';
+                                              break;
+                                            case 'wrong-password':
+                                              message =
+                                                  'Wrong password provided for that user.';
+                                              break;
+                                            case 'operation-not-allowed':
+                                              message =
+                                                  'Email/password accounts are not enabled.';
+                                              break;
+                                            default:
+                                              message =
+                                                  'An undefined Error happened.';
+                                          }
+
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                              SnackBar(content: Text(message)));
+                                        } catch (e) {
+                                          print(e.toString());
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'An error occurred: ${e.toString()}',
+                                              ),
+                                            ),
+                                          );
+                                        } finally {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
+                                        }
+                                      }
+                                    },
+                                    child: const Text("Sign in"),
+                                  ),
+                                ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       ),
     );
   }
