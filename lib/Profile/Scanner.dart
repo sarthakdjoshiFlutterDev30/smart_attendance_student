@@ -29,8 +29,8 @@ class _StudentScannerState extends State<StudentScanner> {
   final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
   final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
 
-  final double ampicsLat = 23.5220667;
-  final double ampicsLng = 72.4481446;
+  final double ampicsLat = 23.5288009;
+  final double ampicsLng = 72.4569495;
   final double allowedRadius = 200;
 
   void _onQRViewCreated(QRViewController controller) {
