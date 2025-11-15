@@ -29,8 +29,8 @@ class _StudentScannerState extends State<StudentScanner> {
   final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
   final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
 
-  final double ampicsLat = 23.5288009;
-  final double ampicsLng = 72.4569495;
+  final double ampicsLat = 23.522058;
+  final double ampicsLng = 72.4481616;
   final double allowedRadius = 200;
 
   void _onQRViewCreated(QRViewController controller) {
@@ -38,10 +38,10 @@ class _StudentScannerState extends State<StudentScanner> {
     controller.scannedDataStream.listen((scanData) async {
       if (!isScanned) {
         isScanned = true;
-        setState(() => isProcessing = true); // ✅ start loading
+        setState(() => isProcessing = true);
         await controller.pauseCamera();
         await verifyFaceAndMarkAttendance(scanData.code!);
-        setState(() => isProcessing = false); // ✅ stop loading
+        setState(() => isProcessing = false);
       }
     });
   }
