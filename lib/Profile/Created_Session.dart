@@ -36,7 +36,6 @@ class _CreatedSessionState extends State<CreatedSession> {
           final todayString =
               "${today.day.toString().padLeft(2, '0')}-${today.month.toString().padLeft(2, '0')}-${today.year}";
 
-          // Filter sessions for today
           final todaySessions = allSessions.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final lecDate = data['lecDate']?.toString().trim() ?? '';

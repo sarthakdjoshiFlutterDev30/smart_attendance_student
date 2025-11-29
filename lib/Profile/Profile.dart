@@ -79,8 +79,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
         if (shouldExit == true) {
-          // For Android
-          // ignore: use_build_context_synchronously
           Navigator.of(context).pop(true);
         }
         return shouldExit ?? false;

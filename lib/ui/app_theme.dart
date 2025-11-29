@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const _brandSeed = Color(0xFF5B4B8A); // Deep purple hue
-
+  static const _brandSeed = Color(0xFF5B4B8A);
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: _brandSeed,
