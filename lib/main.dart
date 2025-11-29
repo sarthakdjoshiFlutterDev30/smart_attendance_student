@@ -51,6 +51,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String? _token;
+  @override
   void initState() {
     super.initState();
     FirebaseMessaging.instance.requestPermission(

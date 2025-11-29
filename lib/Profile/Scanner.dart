@@ -29,8 +29,8 @@ class _StudentScannerState extends State<StudentScanner> {
   final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
   final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
 
-  final double ampicsLat = 23.522058;
-  final double ampicsLng = 72.4481616;
+  final double ampicsLat = 23.5291733;
+  final double ampicsLng = 72.4568126 ;
   final double allowedRadius = 200;
 
   void _onQRViewCreated(QRViewController controller) {
@@ -80,6 +80,7 @@ class _StudentScannerState extends State<StudentScanner> {
       final now = DateTime.now();
       print("Difference${now.difference(createdTime).inSeconds.toString()}");
       if (now.difference(createdTime).inSeconds > 10) {
+        print(now.difference(createdTime).inSeconds.toString());
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('⏰ QR code expired. Try again.')),
         );
