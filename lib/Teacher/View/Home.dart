@@ -1,0 +1,398 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../Login.dart';
+import 'attendance_list_screen.dart';
+import 'create_session_screen.dart';
+
+import '../Controller/ApiService.dart';
+import '../View/Add_Student.dart';
+import '../View/Show All Student.dart';
+import '../View/Show_Profile.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final titleController = TextEditingController();
+  final bodyController = TextEditingController();
+  final api = ApiService();
+
+  int getCrossAxisCount(double width) {
+    if (width < 600) return 2;
+    if (width < 900) return 3;
+    if (width < 1200) return 4;
+    return 5;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final todayDate = DateFormat('dd MMM yyyy').format(DateTime.now());
+    final width = MediaQuery.of(context).size.width;
+    final darkGrey = Colors.grey[900];
+    final cardGrey = Colors.grey[850];
+    final theme = Theme.of(context);
+
+    final List<_DashboardItem> items = [
+      _DashboardItem(
+          icon: Icons.add_circle_outline,
+          label: "Create Session",
+          onTap: () => _navigateTo(context, const CreateSessionScreen())),
+      _DashboardItem(
+          icon: Icons.fact_check_outlined,
+          label: "Attendance",
+          onTap: () => _navigateTo(context, const AttendanceListScreen())),
+      _DashboardItem(
+          icon: Icons.person_add_alt_rounded,
+          label: "Add Student",
+          onTap: () => _navigateTo(context, const AddStudent())),
+      _DashboardItem(
+          icon: Icons.groups_rounded,
+          label: "Show Students",
+          onTap: () => _navigateTo(context, const ShowAllStudent())),
+      _DashboardItem(
+          icon: Icons.notifications_active_outlined,
+          label: "Notify Students",
+          onTap: _showNotificationDialog),
+      _DashboardItem(
+          icon: Icons.assignment_ind_outlined,
+          label: "Student Profile",
+          onTap: () => _navigateTo(context, const StudentProfileScreen())),
+    ];
+
+    return Scaffold(
+      backgroundColor: darkGrey,
+      appBar: AppBar(
+        title: const Text("Xampus"),
+        centerTitle: true,
+        elevation: 8,
+        backgroundColor: Colors.black,
+        actions: [
+          IconButton(
+            tooltip: "Logout",
+            icon: const Icon(Icons.logout),
+            onPressed: _confirmLogout,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // ---------- HEADER ----------
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: LinearGradient(
+                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade400],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                      color: Colors.black.withOpacity(0.4))
+                ],
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 28,
+                    backgroundImage: NetworkImage(
+                        "https://cdn-icons-png.flaticon.com/512/5995/5995527.png"),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Welcome Teacher 👋",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          "Today : $todayDate",
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            // ---------- DASHBOARD GRID ----------
+            GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: getCrossAxisCount(width),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _buildDashboardCard(item, cardGrey!);
+              },
+            ),
+            const SizedBox(height: 30),
+
+            // ---------- TODAY SESSIONS ----------
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                color: cardGrey,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.event_available, color: Colors.white70),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Today's Sessions",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      const Spacer(),
+                      Text(todayDate, style: const TextStyle(color: Colors.white70))
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection("sessions")
+                        .where("lecDate", isEqualTo: todayDate)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: CircularProgressIndicator(color: Colors.white),
+                            ));
+                      }
+                      if (snapshot.data!.docs.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text("No sessions today.",
+                              style: TextStyle(color: Colors.white70)),
+                        );
+                      }
+
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          var data = snapshot.data!.docs[index].data()
+                          as Map<String, dynamic>;
+                          return ListTile(
+                            tileColor: Colors.grey[800],
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.deepPurple,
+                              child: Text(
+                                data['lecNo'] ?? "-",
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            title: Text(
+                              data['lecName'] ?? "No Name",
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          );
+                        },
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemCount: snapshot.data!.docs.length,
+                      );
+                    },
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardCard(_DashboardItem item, Color cardGrey) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: item.onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade400],
+          ),
+          boxShadow: [
+            BoxShadow(
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+                color: Colors.black.withOpacity(0.3))
+          ],
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: Colors.deepPurple,
+                child: Icon(item.icon, color: Colors.white, size: 28),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  Future<void> _confirmLogout() async {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Text("Logout", style: TextStyle(color: Colors.white)),
+          content: const Text("Are you sure you want to logout?",
+              style: TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel", style: TextStyle(color: Colors.white))),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('isLoggedIn', false);
+
+                if (!mounted) return;
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const Login()),
+                        (route) => false);
+              },
+              child: const Text("Logout"),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  void _showNotificationDialog() {
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text("Send Notification", style: TextStyle(color: Colors.white)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: "Title",
+                    prefixIcon: Icon(Icons.title, color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: bodyController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: "Message",
+                    prefixIcon: Icon(Icons.message, color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.white))),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+                onPressed: () async {
+                  if (titleController.text.trim().isEmpty ||
+                      bodyController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Please fill all fields")));
+                    return;
+                  }
+
+                  await api.sendNotification(
+                      titleController.text.trim(), bodyController.text.trim());
+
+                  titleController.clear();
+                  bodyController.clear();
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Notification sent ✅")),
+                  );
+                },
+                child: const Text("Send"),
+              ),
+            ],
+          );
+        });
+  }
+}
+
+class _DashboardItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  _DashboardItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+}

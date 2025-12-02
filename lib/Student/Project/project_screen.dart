@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:xampus_student/Project/Model/Project_Model.dart';
+import 'package:xampus_student/Student/Project/Model/Project_Model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';

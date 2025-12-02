@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:xampus_student/Project/project_screen.dart';
 import 'package:xampus_student/Student/Profile/Created_Session.dart';
+import 'package:xampus_student/Teacher/View/Home.dart';
 
 import '../../Login.dart';
 import '../Model/Student_Model.dart';
+import '../Project/project_screen.dart';
 import '../Provider.dart';
 import 'AttendanceSummaryScreen.dart';
 import 'My Qr Code.dart';
@@ -35,6 +36,13 @@ class _ProfilePageState extends State<ProfilePage> {
         // TODO: implement initState
         super.initState();
         _getCurrentLocation();
+         WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.student.role == 'teacher') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You are a teacher')),
+        );
+      }
+    });
     }
 
     Future<void> _getCurrentLocation() async {
@@ -61,6 +69,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     @override
     Widget build(BuildContext context) {
+        if (widget.student.role == 'student') {
         return WillPopScope(
             onWillPop: () async {
                 final shouldExit = await showDialog<bool>(
@@ -99,7 +108,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     accountName: Text(widget.student.name, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                                     accountEmail: Text(widget.student.email, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                                     currentAccountPicture: CircleAvatar(
-                                        backgroundImage: NetworkImage(widget.student.photourl),
+                                        backgroundImage: NetworkImage("https://drive.google.com/uc?export=view&id=1HM3rCq_oXcZHL9LEA4H9LExId1fuRmci"),
                                     ),
                                     decoration: BoxDecoration(
                                         color: Colors.transparent,
@@ -341,6 +350,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 )
             )
         );
+    } else {
+      return Scaffold(
+        body: Center(
+          child: HomeScreen()
+        ),
+      );
+    }
     }
 
     Widget _buildDetailItem(String label, String value) {

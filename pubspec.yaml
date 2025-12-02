@@ -61,6 +61,13 @@ dependencies:
   easy_docs_viewer: ^0.0.2-unstable-release
   syncfusion_flutter_pdfviewer: ^31.2.16
   device_info_plus: ^12.3.0
+  dio: ^5.9.0
+  csv: ^6.0.0
+  excel: ^4.0.6
+  file_saver: ^0.3.1
+  marquee: ^2.3.0
+  open_file: ^3.3.2
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
