@@ -54,6 +54,13 @@ dependencies:
   shared_preferences: ^2.5.3
   qr_flutter: ^4.1.0
   geolocator: ^14.0.2
+  font_awesome_flutter: ^10.12.0
+  firebase_storage: ^12.4.10
+  url_launcher: ^6.3.2
+  file_picker: ^10.3.7
+  easy_docs_viewer: ^0.0.2-unstable-release
+  syncfusion_flutter_pdfviewer: ^31.2.16
+  device_info_plus: ^12.3.0
 
 dev_dependencies:
   flutter_test:
