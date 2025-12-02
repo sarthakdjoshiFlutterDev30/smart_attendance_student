@@ -3,6 +3,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
 
 import 'Student/Model/Student_Model.dart';
@@ -105,15 +106,14 @@ class _LoginState extends State<Login> {
                               CircleAvatar(
                                 backgroundColor: colorScheme.primaryContainer,
                                 radius: 28,
-                                child: Icon(Icons.how_to_reg,
-                                    color: colorScheme.onPrimaryContainer),
+                                child: Image.asset("assets/images/Logo.png")
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                "Smart Attendance",
+                                "Xampus Student Login",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 22,
+                                  fontSize: 18,
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface,
@@ -308,6 +308,8 @@ class _LoginState extends State<Login> {
                                     child: const Text("Sign in"),
                                   ),
                                 ),
+                          SizedBox(height: 10,),
+                          Center(child: Text("Xampus © 2025", style: TextStyle(color: Colors.white, fontSize: 15),))
                         ],
                       ),
                     ),

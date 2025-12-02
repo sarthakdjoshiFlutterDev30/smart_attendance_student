@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_attendance_student/Student/provider2.dart';
+import 'package:xampus_student/Student/provider2.dart';
 
 class ThemeProvider extends ChangeNotifier {
   void toggleTheme(BuildContext context) {

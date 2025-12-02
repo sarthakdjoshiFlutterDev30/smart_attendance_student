@@ -1,9 +1,7 @@
 
-import 'package:easy_docs_viewer/easy_docs_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:smart_attendance_student/Project/Model/Project_Model.dart';
-import 'package:smart_attendance_student/Project/PDFScreen.dart';
+import 'package:xampus_student/Project/Model/Project_Model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';

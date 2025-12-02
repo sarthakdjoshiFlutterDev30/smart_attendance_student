@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_attendance_student/Project/project_screen.dart';
-import 'package:smart_attendance_student/Student/Profile/Created_Session.dart';
+import 'package:xampus_student/Project/project_screen.dart';
+import 'package:xampus_student/Student/Profile/Created_Session.dart';
 
 import '../../Login.dart';
 import '../Model/Student_Model.dart';
@@ -256,9 +256,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 );
                                             });
                                     }
-                                )
+                                ),
+                              SizedBox(height: 10,),
+                              Center(child: Text("Xampus © 2025", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 15),))
+
                             ]
                         )
+
                     )
                 ),
                 body: Padding(
