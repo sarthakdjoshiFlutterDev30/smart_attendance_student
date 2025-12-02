@@ -2,11 +2,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_attendance_student/Splash.dart';
-import 'package:smart_attendance_student/provider2.dart';
-import 'package:smart_attendance_student/ui/app_theme.dart';
 
-import 'Provider.dart';
+import 'Student/Provider.dart';
+import 'Student/Splash.dart';
+import 'Student/provider2.dart';
+import 'Student/ui/app_theme.dart';
 import 'firebase_options.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
