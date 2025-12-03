@@ -99,7 +99,7 @@ class _ShowAllStudentState extends State<ShowAllStudent> {
                                 dropdownColor: Colors.black,
                                 decoration: _inputStyle("Select Course", Icons.school),
                                 style: const TextStyle(color: Colors.white),
-                                value: selectedCourse,
+                                initialValue: selectedCourse,
                                 items: courseSemesters.keys.map((course) {
                                   return DropdownMenuItem(
                                     value: course,
@@ -122,7 +122,7 @@ class _ShowAllStudentState extends State<ShowAllStudent> {
                                 decoration:
                                 _inputStyle("Select Semester", Icons.calendar_month),
                                 style: const TextStyle(color: Colors.white),
-                                value: selectedSemester,
+                                initialValue: selectedSemester,
                                 items: selectedCourse == null
                                     ? []
                                     : courseSemesters[selectedCourse]!.map((sem) {

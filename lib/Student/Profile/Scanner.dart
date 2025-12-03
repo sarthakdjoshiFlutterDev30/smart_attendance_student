@@ -61,7 +61,7 @@ class _StudentScannerState extends State<StudentScanner> {
         return;
       }
 
-      final sessionData = sessionDoc.data() as Map<String, dynamic>?;
+      final sessionData = sessionDoc.data();
       final String subject =
           (sessionData != null && sessionData['subject'] is String)
               ? (sessionData['subject'] as String)
@@ -190,8 +190,9 @@ class _StudentScannerState extends State<StudentScanner> {
   Future<bool> _isInsideCampus() async {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever)
+        permission == LocationPermission.deniedForever) {
       return false;
+    }
 
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,

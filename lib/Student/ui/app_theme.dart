@@ -24,7 +24,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceVariant,
+        fillColor: colorScheme.surfaceContainerHighest,
         hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
@@ -86,10 +86,10 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceVariant,
+        backgroundColor: colorScheme.surfaceContainerHighest,
         labelStyle: TextStyle(color: colorScheme.onSurface),
         selectedColor: colorScheme.primaryContainer,
-        disabledColor: colorScheme.surfaceVariant,
+        disabledColor: colorScheme.surfaceContainerHighest,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide(color: colorScheme.outlineVariant),
@@ -119,7 +119,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceVariant,
+        fillColor: colorScheme.surfaceContainerHighest,
         hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
@@ -181,10 +181,10 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceVariant,
+        backgroundColor: colorScheme.surfaceContainerHighest,
         labelStyle: TextStyle(color: colorScheme.onSurface),
         selectedColor: colorScheme.primaryContainer,
-        disabledColor: colorScheme.surfaceVariant,
+        disabledColor: colorScheme.surfaceContainerHighest,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide(color: colorScheme.outlineVariant),

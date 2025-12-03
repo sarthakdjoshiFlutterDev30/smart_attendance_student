@@ -59,7 +59,7 @@ final List<Technology> technologies = [
 
 
 class ProjectScreen extends StatefulWidget {
-  const ProjectScreen({Key? key}) : super(key: key);
+  const ProjectScreen({super.key});
 
   @override
   State<ProjectScreen> createState() => _ProjectScreenState();
@@ -165,7 +165,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
           if (_semesterFilter != null || _technologyFilter != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
               child: Row(
                 children: [
                   const Icon(Icons.filter_alt, size: 16),
@@ -423,7 +423,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
           content: dropdownItems.isNotEmpty
               ? DropdownButtonFormField<String>(
             decoration: InputDecoration(labelText: 'Select $title'),
-            value: selectedValue,
+            initialValue: selectedValue,
             items: dropdownItems,
             onChanged: (value) {
               selectedValue = value;
@@ -552,7 +552,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
 
 class ProjectUploadDialog extends StatefulWidget {
   final UserModel currentUser;
-  const ProjectUploadDialog({Key? key, required this.currentUser}) : super(key: key);
+  const ProjectUploadDialog({super.key, required this.currentUser});
 
   @override
   _ProjectUploadDialogState createState() => _ProjectUploadDialogState();
@@ -617,7 +617,7 @@ class _ProjectUploadDialogState extends State<ProjectUploadDialog> {
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(labelText: 'Technology'),
-                value: _selectedTechnology,
+                initialValue: _selectedTechnology,
                 items: technologies.map((Technology tech) {
                   return DropdownMenuItem<String>(
                     value: tech.name,

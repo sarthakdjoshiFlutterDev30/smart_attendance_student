@@ -1,8 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:xampus_student/Student/Profile/Created_Session.dart';
 import 'package:xampus_student/Teacher/View/Home.dart';
@@ -31,6 +38,13 @@ class _ProfilePageState extends State<ProfilePage> {
     bool pass1 = true;
     bool pass2 = true;
     String locationMessage = "";
+    final String faceApiKey = 'BZgv-hUJyvJwdi-ISS5IxsK0IWRn3sln';
+    final String faceApiSecret = 'ATjeyYZJQtdc7zeMJFtArdin09z4LOl0';
+    CameraController? _cameraController;
+    bool _isCameraInitialized = false;
+    bool _isCapturing = false;
+    bool _faceVerified = false;
+
     @override
     void initState() {
         // TODO: implement initState
@@ -43,7 +57,126 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (widget.student.role == 'student') {
+            verifyFace();
+          }
+        });
+        Timer.periodic(const Duration(minutes: 10), (timer) {
+          if (mounted) verifyFace();
+        });
+
     }
+
+    Future<bool> compareFaces(String imageUrl1, File image2) async {
+      try {
+        final uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/compare');
+
+        final request = http.MultipartRequest('POST', uri)
+          ..fields['api_key'] = faceApiKey
+          ..fields['api_secret'] = faceApiSecret
+          ..fields['image_url1'] = imageUrl1
+          ..files.add(await http.MultipartFile.fromPath('image_file2', image2.path));
+
+        final response = await request.send();
+        final responseBody = await response.stream.bytesToString();
+        final data = json.decode(responseBody);
+
+        if (data.containsKey('confidence')) {
+          double confidence = (data['confidence'] as num).toDouble();
+          print("Face Match Confidence: $confidence");
+
+          return confidence >= 70.0;
+        }
+
+        return false;
+      } catch (e) {
+        print("Compare Face Error: $e");
+        return false;
+      }
+    }
+
+    Future<bool> verifyFace() async {
+      if (_faceVerified || _isCapturing) return false;
+      _isCapturing = true;
+
+      try {
+        final cameras = await availableCameras();
+
+        final frontCamera = cameras.firstWhere(
+              (camera) => camera.lensDirection == CameraLensDirection.front,
+        );
+
+        _cameraController = CameraController(
+          frontCamera,
+          ResolutionPreset.medium,
+          enableAudio: false,
+        );
+
+        await _cameraController!.initialize();
+
+        bool faceFound = false;
+
+          final XFile image = await _cameraController!.takePicture();
+          File capturedImage = File(image.path);
+
+          final isMatch = await compareFaces(
+            widget.student.photourl,
+            capturedImage,
+          );
+
+          if (isMatch) {
+            faceFound = true;
+          }
+
+
+        if (faceFound) {
+          _faceVerified = true;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Face matched successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Face not matched. Try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 1),
+            ),
+          );
+         await Future.delayed(Duration(seconds: 1),() => exit(0));
+        }
+
+        await _cameraController!.dispose();
+        _cameraController = null;
+        _isCapturing = false;
+
+        return faceFound;
+      } catch (e) {
+        print("Verify Face Error: $e");
+
+        if (_cameraController != null) {
+          await _cameraController!.dispose();
+          _cameraController = null;
+        }
+
+        _isCapturing = false;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Face verification failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+
+        return false;
+      }
+    }
+
+
 
     Future<void> _getCurrentLocation() async {
         LocationPermission permission = await Geolocator.requestPermission();
@@ -108,7 +241,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     accountName: Text(widget.student.name, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                                     accountEmail: Text(widget.student.email, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                                     currentAccountPicture: CircleAvatar(
-                                        backgroundImage: NetworkImage("https://drive.google.com/uc?export=view&id=1HM3rCq_oXcZHL9LEA4H9LExId1fuRmci"),
+                                        backgroundImage: NetworkImage(widget.student.photourl),
                                     ),
                                     decoration: BoxDecoration(
                                         color: Colors.transparent,
@@ -353,7 +486,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } else {
       return Scaffold(
         body: Center(
-          child: HomeScreen()
+          child: HomeScreen(student: widget.student,)
         ),
       );
     }

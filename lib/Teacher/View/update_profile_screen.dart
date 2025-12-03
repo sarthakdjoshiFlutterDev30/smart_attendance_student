@@ -237,7 +237,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      value: currentValue,
+      initialValue: currentValue,
       dropdownColor: Colors.grey[850],
       style: const TextStyle(color: Colors.white),
       items: items
