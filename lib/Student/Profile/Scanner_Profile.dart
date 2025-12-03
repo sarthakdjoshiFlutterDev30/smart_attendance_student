@@ -26,7 +26,7 @@ class _ScannerProfileState extends State<ScannerProfile> {
         id = scanData.code!;
         print(id);
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('Students')
+            .collection('Users')
             .doc(id)
             .get();
 

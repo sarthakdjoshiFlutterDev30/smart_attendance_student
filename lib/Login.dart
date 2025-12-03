@@ -99,7 +99,7 @@ class _LoginState extends State<Login> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
+                          Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               CircleAvatar(
@@ -109,7 +109,8 @@ class _LoginState extends State<Login> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                "Xampus Student Login",
+                                "Xampus Login",
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 18,

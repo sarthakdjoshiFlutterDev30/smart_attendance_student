@@ -631,7 +631,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 await user.updatePassword(newPass.text);
 
                 await FirebaseFirestore.instance
-                    .collection("Students")
+                    .collection("Users")
                     .doc(widget.student.id)
                     .update({"password": newPass.text});
 

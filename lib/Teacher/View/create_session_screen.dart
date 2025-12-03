@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -13,7 +14,43 @@ class CreateSessionScreen extends StatefulWidget {
 
 class _CreateSessionScreenState extends State<CreateSessionScreen> {
   String todayDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+  String locationMessage = "";
 
+  double lat = 0.0;
+  double log = 0.0; // ✅ using log (not lng)
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  // ================= GET LOCATION =================
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      setState(() {
+        locationMessage = "Location permission denied";
+      });
+      return;
+    }
+
+    Position position =
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    setState(() {
+      lat = position.latitude;
+      log = position.longitude; // ✅ log used here
+
+      locationMessage = "Latitude: $lat , Longitude: $log";
+    });
+
+    print("Teacher Location => $locationMessage");
+  }
+
+  // ================= SHOW QR =================
   void showQRCode(String docId) {
     int secondsLeft = 10;
     Timer? timer;
@@ -35,13 +72,11 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
           });
 
           return AlertDialog(
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: Colors.grey[900],
             title: const Text(
               "Scan QR",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
             ),
             content: SizedBox(
               width: 250,
@@ -57,7 +92,9 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                   Text(
                     "Expires in $secondsLeft seconds",
                     style: const TextStyle(
-                        fontWeight: FontWeight.w600, color: Colors.redAccent),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.redAccent,
+                    ),
                   ),
                 ],
               ),
@@ -84,7 +121,6 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
   Widget build(BuildContext context) {
     final darkGrey = Colors.grey[900];
     final cardGrey = Colors.grey[850];
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: darkGrey,
@@ -96,13 +132,16 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
       ),
       body: Column(
         children: [
-          // ---------- HEADER ----------
+          // ---------------- HEADER ----------------
           Container(
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade400],
+                colors: [
+                  Colors.deepPurple.shade700,
+                  Colors.deepPurple.shade400
+                ],
               ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(30),
@@ -131,9 +170,10 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
               ],
             ),
           ),
+
           const SizedBox(height: 20),
 
-          // ---------- SESSION LIST ----------
+          // ---------------- SESSION LIST ----------------
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -145,10 +185,12 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
-                        child: CircularProgressIndicator(color: Colors.white));
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
                   }
 
                   final docs = snapshot.data!.docs;
+
                   final todaySessions = docs.where((d) {
                     final data = d.data() as Map<String, dynamic>;
                     return data['lecDate'] == todayDate;
@@ -199,15 +241,17 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                           contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
                             backgroundColor:
-                            Colors.deepPurple.withOpacity(0.1),
-                            child: const Icon(Icons.book, color: Colors.deepPurple),
+                            Colors.deepPurple.withOpacity(0.2),
+                            child: const Icon(Icons.book,
+                                color: Colors.deepPurple),
                           ),
                           title: Text(
                             data['lecName'] ?? '',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.white),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
                           ),
                           subtitle: Padding(
                             padding: const EdgeInsets.only(top: 6),
@@ -217,6 +261,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                                   fontSize: 14, color: Colors.white70),
                             ),
                           ),
+
+                          // ---------------- SCAN BUTTON ----------------
                           trailing: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepPurple,
@@ -227,19 +273,27 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                               ),
                             ),
                             onPressed: () {
+                              print("Latitude : $lat");
+                              print("Longitude : $log");
+
                               FirebaseFirestore.instance
                                   .collection("sessions")
                                   .doc(docId)
                                   .update({
                                 'createdAtMillis':
                                 DateTime.now().millisecondsSinceEpoch,
+                                'lat': lat,
+                                'log': log, // ✅ using log
                               }).then((_) {
                                 showQRCode(docId);
                               });
                             },
-                            icon: const Icon(Icons.qr_code, color: Colors.white),
-                            label: const Text("Scan",
-                                style: TextStyle(color: Colors.white)),
+                            icon: const Icon(Icons.qr_code,
+                                color: Colors.white),
+                            label: const Text(
+                              "Scan",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ),
                       );
