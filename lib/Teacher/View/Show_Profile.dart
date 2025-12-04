@@ -34,7 +34,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Future<List<StudentModel>> fetchAllStudents() async {
     final snapshot =
-    await FirebaseFirestore.instance.collection("Students").get();
+    await FirebaseFirestore.instance.collection("Students").where('role',isEqualTo: 'student').get();
 
     return snapshot.docs
         .map((doc) => StudentModel.fromSnapshot(doc.id, doc.data()))

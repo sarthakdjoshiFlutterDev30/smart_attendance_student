@@ -163,6 +163,7 @@ class _ShowAllStudentState extends State<ShowAllStudent> {
                           .collection('Students')
                           .where("course", isEqualTo: selectedCourse)
                           .where("semester", isEqualTo: selectedSemester)
+                          .where('role',isEqualTo: 'student')
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==

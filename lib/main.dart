@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'Student/Provider.dart';
@@ -13,7 +15,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print('Handling a background message: ${message.messageId}');
 }
-
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -73,6 +76,25 @@ class _MyAppState extends State<MyApp> {
         print('Message also contained a notification: ${message.notification}');
       }
     });
+    _requestCameraPermission();
+  }
+  Future<void> _requestCameraPermission() async {
+    var status = await Permission.camera.status;
+
+    if (status.isDenied) {
+      // We haven't asked yet, or the user denied it previously but not permanently
+      if (await Permission.camera.request().isGranted) {
+        print("✅ Camera permission granted");
+      } else {
+        print("❌ Camera permission denied");
+      }
+    } else if (status.isPermanentlyDenied) {
+      // The user opted to never see the permission request again
+      print("⚠️ Camera permission permanently denied. Opening settings.");
+      openAppSettings();
+    } else if (status.isGranted) {
+      print("✅ Camera permission already granted");
+    }
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Login.dart';
@@ -51,12 +52,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     verifyFace();
                 }
             });
-        name=widget.student.name;
-        url=widget.student.photourl;
+        requestCameraPermission();
         Timer.periodic(const Duration(minutes: 10), (timer) {
           if (mounted) verifyFace();
         });
     }
+
+    Future<bool> requestCameraPermission() async {
+
+      PermissionStatus status = await Permission.camera.status;
+
+      if (status.isGranted) {
+        print("✅ Camera permission already granted");
+        return true;
+      }
+
+      status = await Permission.camera.request();
+
+      if (status.isGranted) {
+        print("✅ Camera permission granted");
+        return true;
+      } else if (status.isDenied) {
+        print("❌ Camera permission denied");
+        return false;
+      } else if (status.isPermanentlyDenied) {
+        print("⚠️ Camera permission permanently denied");
+        openAppSettings();
+        return false;
+      }
+
+      return false;
+    }
+
     Future<bool> compareFaces(String imageUrl1, File image2) async {
         try {
             final uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/compare');

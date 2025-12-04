@@ -79,23 +79,6 @@ class _StudentScannerState extends State<StudentScanner> {
       final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAtMillis);
       final now = DateTime.now();
       print("Difference${now.difference(createdTime).inSeconds.toString()}");
-      if (now.difference(createdTime).inSeconds > 10) {
-        print(now.difference(createdTime).inSeconds.toString());
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('⏰ QR code expired. Try again.')),
-        );
-        Navigator.pop(context);
-        return;
-      }
-
-      bool isInsideCampus = await _isInsideCampus();
-      if (!isInsideCampus) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ You are not inside AMPICS campus!')),
-        );
-        Navigator.pop(context);
-        return;
-      }
       final attendeeQuery = await FirebaseFirestore.instance
           .collection('sessions')
           .doc(sessionId)
@@ -187,26 +170,6 @@ class _StudentScannerState extends State<StudentScanner> {
         });
   }
 
-  Future<bool> _isInsideCampus() async {
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      return false;
-    }
-
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    double distance = Geolocator.distanceBetween(
-      ampicsLat,
-      ampicsLng,
-      position.latitude,
-      position.longitude,
-    );
-
-    return distance <= allowedRadius;
-  }
 
   @override
   void dispose() {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -131,7 +132,6 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 .update({'isActive': false});
                  timer?.cancel();
             FirebaseFirestore.instance.collection("notification").doc(docId).delete();
-
             Navigator.pop(context);
 
                 },
