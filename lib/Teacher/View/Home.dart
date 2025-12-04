@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _DashboardItem(
                 icon: Icons.add_circle_outline,
                 label: "Create Session",
-                onTap: () => _navigateTo(context, const CreateSessionScreen())),
+                onTap: () => _navigateTo(context,  CreateSessionScreen(Name: widget.student.name,))),
             _DashboardItem(
                 icon: Icons.fact_check_outlined,
                 label: "Attendance",

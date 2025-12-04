@@ -6,7 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class CreateSessionScreen extends StatefulWidget {
-  const CreateSessionScreen({super.key});
+  final String Name;
+  const CreateSessionScreen({super.key, required this.Name});
 
   @override
   State<CreateSessionScreen> createState() => _CreateSessionScreenState();
@@ -17,6 +18,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
   String locationMessage = "";
   double lat = 0.0;
   double log = 0.0;
+  Map<String, bool> switchStates = {};
+
   @override
   void initState() {
     super.initState();
@@ -48,9 +51,18 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
   }
 
   // ================= SHOW QR =================
-  void showQRCode(String docId) {
+  void showQRCode(String docId,String Name,String course,String semester) {
     int secondsLeft = 10;
     Timer? timer;
+    FirebaseFirestore.instance
+        .collection("notification")
+        .doc(docId)
+        .set({
+      'docId': docId,
+      'lat':lat,
+      'log':log,
+      'course':course,
+      'semester':semester});
 
     showDialog(
       context: context,
@@ -71,9 +83,18 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: Colors.grey[900],
-            title: const Text(
-              "Scan QR",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            title:  Column(
+              children: [
+                Text(
+                  "Lec Name=$Name",
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                SizedBox(height: 10,),
+                Text(
+                  "Lec ID : $docId",
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
             ),
             content: SizedBox(
               width: 250,
@@ -99,8 +120,20 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
             actions: [
               TextButton(
                 onPressed: () {
-                  timer?.cancel();
-                  Navigator.pop(context);
+            if (mounted) {
+              this.setState(() {
+                switchStates[docId] = false;
+              });
+            }
+            FirebaseFirestore.instance
+                .collection("sessions")
+                .doc(docId)
+                .update({'isActive': false});
+                 timer?.cancel();
+            FirebaseFirestore.instance.collection("notification").doc(docId).delete();
+
+            Navigator.pop(context);
+
                 },
                 child: const Text(
                   "Close",
@@ -111,7 +144,20 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
           );
         },
       ),
-    ).then((_) => timer?.cancel());
+    ).then((_){
+      if (mounted) {
+        this.setState(() {
+          switchStates[docId] = false;
+        });
+      }
+      FirebaseFirestore.instance.collection("notification").doc(docId).delete();
+      FirebaseFirestore.instance
+          .collection("sessions")
+          .doc(docId)
+          .update({'isActive': false});
+      timer?.cancel();
+
+    });
   }
 
   @override
@@ -148,8 +194,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Welcome, Teacher 👋",
+                Text(
+                  "${widget.Name} 👋",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -259,38 +305,39 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                             ),
                           ),
 
-                          // ---------------- SCAN BUTTON ----------------
-                          trailing: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            onPressed: () {
-                              print("Latitude : $lat");
-                              print("Longitude : $log");
-
-                              FirebaseFirestore.instance
-                                  .collection("sessions")
-                                  .doc(docId)
-                                  .update({
-                                'createdAtMillis':
-                                DateTime.now().millisecondsSinceEpoch,
-                                'lat': lat,
-                                'log': log, // ✅ using log
-                              }).then((_) {
-                                showQRCode(docId);
+                          trailing: Switch(
+                            value: switchStates[docId] ?? false,
+                            activeColor: Colors.green,
+                            inactiveThumbColor: Colors.red,
+                            onChanged: (value) {
+                              setState(() {
+                                switchStates[docId] = value;
                               });
+
+                              if (value == true) {
+                                print("Latitude : $lat");
+                                print("Longitude : $log");
+
+                                FirebaseFirestore.instance
+                                    .collection("sessions")
+                                    .doc(docId)
+                                    .update({
+                                  'createdAtMillis': DateTime.now().millisecondsSinceEpoch,
+                                  'lat': lat,
+                                  'log': log,
+                                  'isActive': true
+                                }).then((_) {
+                                  showQRCode(docId,data['lecName'] ?? '',data['course'] ?? '',data['semester'] ?? '');
+                                }).catchError((error) {
+                                  print('Error updating session: $error');
+                                });
+                              } else {
+                                FirebaseFirestore.instance
+                                    .collection("sessions")
+                                    .doc(docId)
+                                    .update({'isActive': false});
+                              }
                             },
-                            icon: const Icon(Icons.qr_code,
-                                color: Colors.white),
-                            label: const Text(
-                              "Scan",
-                              style: TextStyle(color: Colors.white),
-                            ),
                           ),
                         ),
                       );
