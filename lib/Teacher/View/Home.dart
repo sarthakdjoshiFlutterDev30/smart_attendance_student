@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -40,16 +39,20 @@ class _HomeScreenState extends State<HomeScreen> {
     bool _isCameraInitialized = false;
     bool _isCapturing = false;
     bool _faceVerified = false;
+    String name="";
+    String url="";
     @override
     void initState() {
         // TODO: implement initState
         super.initState();
-        print(widget.student);
+        print(widget.student.role);
         WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (widget.student.role == 'teacher') {
                     verifyFace();
                 }
             });
+        name=widget.student.name;
+        url=widget.student.photourl;
         Timer.periodic(const Duration(minutes: 10), (timer) {
           if (mounted) verifyFace();
         });
@@ -169,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     @override
     Widget build(BuildContext context) {
-        final todayDate = DateFormat('dd MMM yyyy').format(DateTime.now());
+        final todayDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
         final width = MediaQuery.of(context).size.width;
         final darkGrey = Colors.grey[900];
         final cardGrey = Colors.grey[850];
@@ -239,18 +242,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: Row(
                                 children: [
-                                    const CircleAvatar(
+                                     CircleAvatar(
                                         radius: 28,
                                         backgroundImage: NetworkImage(
-                                            "https://cdn-icons-png.flaticon.com/512/5995/5995527.png")
+                                            widget.student.photourl)
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
                                         child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                                const Text(
-                                                    "Welcome Teacher 👋",
+                                                 Text(
+                                                    "Welcome ${widget.student.name} 👋",
                                                     style: TextStyle(
                                                         fontSize: 20,
                                                         fontWeight: FontWeight.bold,
@@ -319,6 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         stream: FirebaseFirestore.instance
                                             .collection("sessions")
                                             .where("lecDate", isEqualTo: todayDate)
+                                        .orderBy("lecNo")
                                             .snapshots(),
                                         builder: (context, snapshot) {
                                             if (!snapshot.hasData) {

@@ -15,10 +15,8 @@ class CreateSessionScreen extends StatefulWidget {
 class _CreateSessionScreenState extends State<CreateSessionScreen> {
   String todayDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
   String locationMessage = "";
-
   double lat = 0.0;
-  double log = 0.0; // ✅ using log (not lng)
-
+  double log = 0.0;
   @override
   void initState() {
     super.initState();
@@ -42,8 +40,7 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
 
     setState(() {
       lat = position.latitude;
-      log = position.longitude; // ✅ log used here
-
+      log = position.longitude;
       locationMessage = "Latitude: $lat , Longitude: $log";
     });
 

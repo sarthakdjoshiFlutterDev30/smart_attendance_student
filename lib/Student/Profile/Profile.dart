@@ -12,9 +12,9 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:xampus_student/Student/Profile/Created_Session.dart';
-import 'package:xampus_student/Teacher/View/Home.dart';
 
 import '../../Login.dart';
+import '../../Teacher/View/Home.dart';
 import '../Model/Student_Model.dart';
 import '../Project/project_screen.dart';
 import '../Provider.dart';
