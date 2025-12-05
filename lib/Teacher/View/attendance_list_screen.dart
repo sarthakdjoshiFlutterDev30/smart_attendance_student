@@ -1,8 +1,4 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:csv/csv.dart';
-import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -17,40 +13,13 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   String? selectedSessionId;
   String? selectedSessionName;
 
-  Future<void> _exportToCSV(List<QueryDocumentSnapshot> docs) async {
-    List<List<String>> data = [
-      ['Name', 'EnrollmentNo', 'Course', 'Semester', 'Date', 'Time'],
-      ...docs.map((doc) {
-        final d = doc.data() as Map<String, dynamic>;
-        return [
-          d['name'] ?? '',
-          d['enrollmentNo'] ?? '',
-          d['course'] ?? '',
-          d['semester'] ?? '',
-          d['timestamp'] ?? '',
-          d['time'] ?? '',
-        ];
-      }),
-    ];
-
-    final csvData = const ListToCsvConverter().convert(data);
-    final bytes = utf8.encode(csvData);
-
-    await FileSaver.instance.saveFile(
-      name: "$selectedSessionName-attendance",
-      bytes: bytes,
-      fileExtension: "csv",
-      mimeType: MimeType.csv,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Attendance Reports"),
+        title: const Text("Attendance Reports",style: TextStyle(color: Colors.white),),
         centerTitle: true,
         backgroundColor: Colors.blue.shade700,
       ),
@@ -241,32 +210,6 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
 
                           const SizedBox(height: 10),
 
-                          // -------- EXPORT BUTTON ----------
-                          SizedBox(
-                            width: double.infinity,
-                            height: 55, // Mobile height ✅
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.download),
-                              label: const Text(
-                                "Export CSV",
-                                style: TextStyle(letterSpacing: 0.5),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade700,
-                                elevation: 5,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                textStyle: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              onPressed: () async {
-                                await _exportToCSV(attendees);
-                              },
-                            ),
-                          ),
                         ],
                       );
                     },

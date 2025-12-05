@@ -16,11 +16,18 @@ class CreatedSession extends StatefulWidget {
 class _CreatedSessionState extends State<CreatedSession> {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: const Color(0xff0F172A), // Premium dark
       appBar: AppBar(
-        title: const Text("Created Sessions"),
+        title: const Text(
+          "Created Sessions",
+          style: TextStyle(color: Colors.white,   fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.indigo,
+        backgroundColor: const Color(0xff020617),
+        elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -28,7 +35,12 @@ class _CreatedSessionState extends State<CreatedSession> {
             .orderBy('createdAtMillis', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const CircularProgressIndicator();
+
+          if (!snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.indigo),
+            );
+          }
 
           final allSessions = snapshot.data!.docs;
 
@@ -42,25 +54,28 @@ class _CreatedSessionState extends State<CreatedSession> {
             return lecDate == todayString;
           }).toList();
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
           if (todaySessions.isEmpty) {
-            return const Center(child: Text("No sessions for today"));
+            return const Center(
+              child: Text(
+                "No sessions for today",
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+            );
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             itemCount: todaySessions.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final doc = todaySessions[index];
               final data = doc.data() as Map<String, dynamic>;
+
               final title = data['lecName'] ?? doc.id;
               final date = data['lecDate'] ?? 'N/A';
 
               return InkWell(
+                borderRadius: BorderRadius.circular(20),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -73,29 +88,56 @@ class _CreatedSessionState extends State<CreatedSession> {
                   );
                 },
                 child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(20),
+
+                    // 🔥 Premium Gradient
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xff1E293B),
+                        const Color(0xff0F172A),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+
+                    // Soft border
+                    border: Border.all(
+                      color: Colors.white10,
+                    ),
+
                     boxShadow: const [
                       BoxShadow(
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                        color: Colors.black12,
+                        color: Colors.black54,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 16,
-                  ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.event_note,
-                        size: 32,
-                        color: Colors.indigo,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.indigo,
+                              Colors.blueAccent.shade200
+                            ],
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.event_note,
+                          size: 26,
+                          color: Colors.white,
+                        ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 15),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,26 +145,41 @@ class _CreatedSessionState extends State<CreatedSession> {
                             Text(
                               title.toString(),
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.3,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              date,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today,
+                                    size: 14, color: Colors.white54),
+                                const SizedBox(width: 6),
+                                Text(
+                                  date,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey,
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: Colors.white70,
+                        ),
                       ),
                     ],
                   ),

@@ -3,11 +3,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 
-import 'Student/Provider.dart';
 import 'Student/Splash.dart';
-import 'Student/provider2.dart';
 import 'Student/ui/app_theme.dart';
 import 'firebase_options.dart';
 
@@ -33,17 +30,8 @@ void main() async {
   });
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => ThemePersistenceProvider()..loadTheme(),
-        ),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
-}
+      const MyApp());
+ }
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -99,13 +87,11 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemePersistenceProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: AppTheme.light(),
+      theme: AppTheme.dark(),
       darkTheme: AppTheme.dark(),
-      themeMode: themeProvider.themeMode,
       home: Splash(),
     );
   }

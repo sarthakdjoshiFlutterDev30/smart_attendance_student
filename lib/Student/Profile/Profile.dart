@@ -15,16 +15,15 @@ import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:xampus_student/Student/Profile/Created_Session.dart';
+import 'package:xampus_student/Student/Profile/Scanner.dart';
 
 import '../../Login.dart';
 import '../../Teacher/View/Home.dart';
 import '../../main.dart';
 import '../Model/Student_Model.dart';
 import '../Project/project_screen.dart';
-import '../Provider.dart';
 import 'AttendanceSummaryScreen.dart';
 import 'My Qr Code.dart';
-import 'Scanner.dart';
 import 'Scanner_Profile.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -159,17 +158,19 @@ class _ProfilePageState extends State<ProfilePage> {
           double lng = double.tryParse(data['log'].toString()) ?? 0.0;
           String docId = data['docId'] ?? change.doc.id;
 
+
           double distance = Geolocator.distanceBetween(
             myLat,
             myLng,
             lat,
             lng,
           );
-          // LOGIC: Only verify if conditions match
+          print("Doc ID : $docId");
+          print("Distance : ${distance.toStringAsFixed(2)} meters");
+
           if (distance <= 200 &&
               course.toUpperCase().trim() == widget.student.course &&
               semester == widget.student.semester) {
-            print( semester == widget.student.semester);
             print("✅ CONDITIONS MET - STARTING AUTOMATIC ATTENDANCE");
             print("Doc ID : $docId");
             print("Distance : ${distance.toStringAsFixed(2)} meters");
@@ -186,7 +187,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   SnackBar(content: Text("Attendance Available: $distance"))
               );
 
-              // Trigger verification
               verifyFaceAndMarkAttendance(docId2);
             }
 
@@ -587,19 +587,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           .colorScheme
                           .onPrimary
                           .withOpacity(0.5)),
-                  // Change Theme
-                  ListTile(
-                    leading: Icon(Icons.nightlight_sharp,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                    title: Text("Change Your Theme",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.onPrimary)),
-                    onTap: () {
-                      Provider.of<ThemeProvider>(context, listen: false)
-                          .toggleTheme(context);
-                    },
-                  ),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.redAccent),
                     title: const Text("Logout",
@@ -664,6 +651,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildDetailItem('Semester', widget.student.semester),
                     Divider(color: Colors.grey.shade300),
                     const SizedBox(height: 10),
+                    _buildActionButton(Icons.qr_code, "Scan Session Qr code ",
+                        Colors.deepPurple, ()=>Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => StudentScanner(std: widget.student)))),
+                  const SizedBox(height: 10),
                     _buildActionButton(Icons.lock, "Change Password",
                         Colors.deepPurple, _showPasswordDialog)
                   ],

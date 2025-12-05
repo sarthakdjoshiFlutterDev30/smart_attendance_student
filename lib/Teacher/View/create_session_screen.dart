@@ -169,9 +169,9 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
       backgroundColor: darkGrey,
       appBar: AppBar(
         elevation: 0,
-        title: const Text("Smart Attendance"),
+        title: const Text("Create Session",style: TextStyle(color: Colors.white),),
         centerTitle: true,
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white12,
       ),
       body: Column(
         children: [

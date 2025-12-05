@@ -28,11 +28,12 @@ android {
     }
 
     defaultConfig {
+        multiDexEnabled = true
         applicationId = "com.example.smart_attendance_student"
-        minSdkVersion  (flutter.minSdkVersion)
+        minSdk = 24
         targetSdk = 35
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = 1
+        versionName = "1.0"
     }
 
     signingConfigs {
@@ -63,5 +64,7 @@ flutter {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
+    implementation ("androidx.multidex:multidex:2.0.1")
+
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

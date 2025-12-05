@@ -196,118 +196,119 @@ class _LoginState extends State<Login> {
                                 )
                               : SizedBox(
                                   height: 52,
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      if (email.text.trim().isEmpty ||
-                                          password.text.trim().isEmpty) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Enter email and password",
-                                            ),
-                                            duration: Duration(seconds: 2),
-                                          ),
-                                        );
-                                      } else {
-                                        setState(() {
-                                          _isLoading = true;
-                                        });
-                                        try {
-                                          UserCredential userCredential =
-                                              await FirebaseAuth.instance
-                                                  .signInWithEmailAndPassword(
-                                            email: email.text.trim(),
-                                            password: password.text.trim(),
-                                          );
-                                          print(userCredential);
-
-                                          DocumentSnapshot userDoc =
-                                              await FirebaseFirestore.instance
-                                                  .collection('Students')
-                                                  .doc(userCredential
-                                                      .user
-                                                      ?.uid)
-                                                  .get();
-
-                                          if (userDoc.exists) {
-                                            StudentModel student =
-                                                StudentModel.fromSnapshot(
-                                              userDoc.id,
-                                              userDoc.data()
-                                                  as Map<String, dynamic>,
-                                            );
-                                            Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ProfilePage(
-                                                        student: student),
-                                              ),
-                                            );
-                                            print(
-                                                "User: ${userCredential.user?.uid}");
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                    'User data not found.'),
-                                              ),
-                                            );
-                                          }
-                                        } on FirebaseAuthException catch (e) {
-                                          String message;
-                                          switch (e.code) {
-                                            case 'invalid-email':
-                                              message =
-                                                  'The email address is not valid.';
-                                              break;
-                                            case 'user-disabled':
-                                              message =
-                                                  'The user corresponding to the given email has been disabled.';
-                                              break;
-                                            case 'user-not-found':
-                                              message =
-                                                  'No user found for that email.';
-                                              break;
-                                            case 'wrong-password':
-                                              message =
-                                                  'Wrong password provided for that user.';
-                                              break;
-                                            case 'operation-not-allowed':
-                                              message =
-                                                  'Email/password accounts are not enabled.';
-                                              break;
-                                            default:
-                                              message =
-                                                  'An undefined Error happened.';
-                                          }
-
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                              SnackBar(content: Text(message)));
-                                        } catch (e) {
-                                          print(e.toString());
+                                  child:
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        if (email.text.trim().isEmpty ||
+                                            password.text.trim().isEmpty) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
-                                            SnackBar(
+                                            const SnackBar(
                                               content: Text(
-                                                'An error occurred: ${e.toString()}',
+                                                "Enter email and password",
                                               ),
+                                              duration: Duration(seconds: 2),
                                             ),
                                           );
-                                        } finally {
+                                        } else {
                                           setState(() {
-                                            _isLoading = false;
+                                            _isLoading = true;
                                           });
+                                          try {
+                                            UserCredential userCredential =
+                                                await FirebaseAuth.instance
+                                                    .signInWithEmailAndPassword(
+                                              email: email.text.trim(),
+                                              password: password.text.trim(),
+                                            );
+                                            print(userCredential);
+
+                                            DocumentSnapshot userDoc =
+                                                await FirebaseFirestore.instance
+                                                    .collection('Students')
+                                                    .doc(userCredential
+                                                        .user
+                                                        ?.uid)
+                                                    .get();
+
+                                            if (userDoc.exists) {
+                                              StudentModel student =
+                                                  StudentModel.fromSnapshot(
+                                                userDoc.id,
+                                                userDoc.data()
+                                                    as Map<String, dynamic>,
+                                              );
+                                              Navigator.pushReplacement(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ProfilePage(
+                                                          student: student),
+                                                ),
+                                              );
+                                              print(
+                                                  "User: ${userCredential.user?.uid}");
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      'User data not found.'),
+                                                ),
+                                              );
+                                            }
+                                          } on FirebaseAuthException catch (e) {
+                                            String message;
+                                            switch (e.code) {
+                                              case 'invalid-email':
+                                                message =
+                                                    'The email address is not valid.';
+                                                break;
+                                              case 'user-disabled':
+                                                message =
+                                                    'The user corresponding to the given email has been disabled.';
+                                                break;
+                                              case 'user-not-found':
+                                                message =
+                                                    'No user found for that email.';
+                                                break;
+                                              case 'wrong-password':
+                                                message =
+                                                    'Wrong password provided for that user.';
+                                                break;
+                                              case 'operation-not-allowed':
+                                                message =
+                                                    'Email/password accounts are not enabled.';
+                                                break;
+                                              default:
+                                                message =
+                                                    'An undefined Error happened.';
+                                            }
+
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                                SnackBar(content: Text(message)));
+                                          } catch (e) {
+                                            print(e.toString());
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'An error occurred: ${e.toString()}',
+                                                ),
+                                              ),
+                                            );
+                                          } finally {
+                                            setState(() {
+                                              _isLoading = false;
+                                            });
+                                          }
                                         }
-                                      }
-                                    },
-                                    child: const Text("Sign in"),
+                                      },
+                                      child: const Text("Sign in"),
+                                    ),
                                   ),
-                                ),
                           SizedBox(height: 10,),
                           Center(child: Text("Xampus © 2025", style: TextStyle(color: Colors.white, fontSize: 15),))
                         ],

@@ -21,13 +21,14 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
   void initState() {
     super.initState();
     fetchAttendanceData();
+    print(widget.enrollmentNo);
   }
 
   Future<void> fetchAttendanceData() async {
     try {
       // Fetch all sessions
       final sessionSnapshot =
-      await FirebaseFirestore.instance.collection('sessions').where('role',isEqualTo: 'student').get();
+      await FirebaseFirestore.instance.collection('sessions').get();
 
       Map<String, int> tempTotalLectures = {};
       Map<String, int> tempAttendedLectures = {};

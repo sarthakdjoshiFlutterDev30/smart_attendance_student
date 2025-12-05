@@ -25,23 +25,39 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
         .collection('attendees')
         .where('enrollmentNo', isEqualTo: widget.enrollmentNumber);
 
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A), // Premium Dark background
       appBar: AppBar(
-        title: const Text('Recent Attendance'),
         centerTitle: true,
-        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 8,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF1E293B),
+                Color(0xFF020617),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text(
+          'Recent Attendance',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1,
+          ),
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: attendeesRef.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(
+            return const Center(
               child: Text(
                 'Error loading attendees',
-                style: TextStyle(color: theme.colorScheme.error),
+                style: TextStyle(color: Colors.redAccent),
               ),
             );
           }
@@ -49,21 +65,20 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: Shimmer(
-                color: isDarkMode ? Colors.white24 : Colors.grey,
+                color: Colors.white10,
                 child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  height: 150,
                   decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Center(
                     child: Text(
-                      "Please Wait ...",
+                      "Loading Attendance...",
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                        fontSize: 18,
                       ),
                     ),
                   ),
@@ -74,18 +89,20 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
 
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
-            return Center(
+            return const Center(
               child: Text(
                 'No attendees yet.',
-                style: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 18,
+                ),
               ),
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
               final name = data['name'] ?? 'Unknown';
@@ -97,97 +114,112 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
               final photoUrl = data['photourl'] as String? ?? '';
 
               return Container(
+                margin: const EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF1E293B).withOpacity(0.95),
+                      const Color(0xFF020617).withOpacity(0.95),
+                    ],
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                      color: isDarkMode ? Colors.black54 : Colors.black12,
-                    ),
+                      color: Colors.cyanAccent.withOpacity(0.08),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    )
                   ],
+                  border: Border.all(
+                    color: Colors.white10,
+                  ),
                 ),
-                padding: const EdgeInsets.all(14),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: photoUrl.isNotEmpty
-                            ? CircleAvatar(
-                                backgroundImage: NetworkImage(photoUrl),
-                              )
-                            : Container(
-                                color: isDarkMode
-                                    ? Colors.grey.shade800
-                                    : Colors.grey.shade200,
-                                child: const Icon(Icons.person, size: 32),
-                              ),
+                    // Avatar with neon border
+                    Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF22D3EE),
+                            Color(0xFF3B82F6),
+                          ],
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.black,
+                        backgroundImage:
+                        photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                        child: photoUrl.isEmpty
+                            ? const Icon(
+                          Icons.person,
+                          size: 30,
+                          color: Colors.white60,
+                        )
+                            : null,
                       ),
                     ),
-                    const SizedBox(width: 14),
+
+                    const SizedBox(width: 16),
+
+                    // Text Data
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             name,
-                            style: TextStyle(
-                              fontSize: 16,
+                            style: const TextStyle(
+                              fontSize: 17,
                               fontWeight: FontWeight.bold,
-                              color: theme.textTheme.bodyLarge?.color,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Enrollment: $enrollment",
-                            style: TextStyle(
-                              color: theme.textTheme.bodyMedium?.color,
-                            ),
-                          ),
-                          Text(
-                            "Course: $course | Sem: $semester",
-                            style: TextStyle(
-                              color: theme.textTheme.bodyMedium?.color,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           const SizedBox(height: 6),
+                          Text(
+                            "Enrollment: $enrollment",
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          Text(
+                            "Course: $course  |  Sem: $semester",
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(
-                                Icons.calendar_month,
-                                size: 14,
-                                color: theme.iconTheme.color,
-                              ),
-                              const SizedBox(width: 4),
+                              const Icon(Icons.calendar_today,
+                                  size: 14, color: Colors.cyanAccent),
+                              const SizedBox(width: 6),
                               Text(
                                 timestamp.toString(),
-                                style: TextStyle(
-                                  color: theme.textTheme.bodyMedium?.color,
-                                ),
+                                style: const TextStyle(color: Colors.white60),
                               ),
-                              const SizedBox(width: 12),
-                              Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: theme.iconTheme.color,
-                              ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 16),
+                              const Icon(Icons.access_time,
+                                  size: 14, color: Colors.cyanAccent),
+                              const SizedBox(width: 6),
                               Text(
                                 time.toString(),
-                                style: TextStyle(
-                                  color: theme.textTheme.bodyMedium?.color,
-                                ),
+                                style: const TextStyle(color: Colors.white60),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.check_circle, color: Colors.green),
+
+                    // Status Icon
+                    const Icon(
+                      Icons.verified_rounded,
+                      color: Colors.greenAccent,
+                      size: 32,
+                    ),
                   ],
                 ),
               );
